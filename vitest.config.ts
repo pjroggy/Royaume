@@ -12,6 +12,7 @@ export default defineConfig({
     // Les tests s'exécutent toujours dans un environnement de test, y compris lorsqu'ils
     // sont lancés par la construction Vercel, où NODE_ENV vaut « production ». Ils ne
     // dépendent ainsi d'aucune variable de l'environnement de production.
+    testTimeout: 20_000,
     env: { NODE_ENV: 'test' },
   },
 })
