@@ -13,12 +13,12 @@ export interface Look {
 
 export const theme: Record<string, Look> = {
   village: { glyph: '🏰', label: 'Village' },
-  wood: { glyph: '🪵', label: 'Bois' },
-  stone: { glyph: '🪨', label: 'Pierre' },
-  gold: { glyph: '🪙', label: 'Or' },
-  sawmill: { glyph: '🪚', label: 'Scierie' },
-  quarry: { glyph: '⛏️', label: 'Carrière' },
-  mine: { glyph: '⚒️', label: 'Mine' },
+  wood: { glyph: '🐟', label: 'poisson' },
+  stone: { glyph: '🥛', label: 'lait' },
+  gold: { glyph: '🪴', label: 'herbe à chat' },
+  sawmill: { glyph: '🛳️', label: 'bateau' },
+  quarry: { glyph: '🐄', label: 'ferme' },
+  mine: { glyph: '🏡', label: 'jardin' },
 }
 
 /** Apparence d'une entité ; une apparence neutre si l'entité n'est pas décrite. */
