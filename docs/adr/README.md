@@ -60,3 +60,5 @@ Un module n'est accessible depuis l'extérieur que par ses entrées publiques : 
 
 - Messages de commit conformes à Conventional Commits.
 - `pnpm verify` doit réussir avant tout envoi sur la branche `main`.
+
+| [0002](0002-event-sourcing-village.md) | Event Sourcing pour le Village | Accepté |
