@@ -1,80 +1,144 @@
-import { Hono } from 'hono'
-import { createDungeonModule } from '@/modules/dungeon'
-import { createRealmModule } from '@/modules/realm'
-import { createSystemModule } from '@/modules/system'
-import type { AuthPort } from '@/platform/auth/port'
-import type { EventStore } from '@/platform/event-store/event-store'
-import { requireUser } from '@/platform/http/require-user'
-import type { AppEnv } from '@/platform/http/types'
-import type { ChannelPolicy } from '@/platform/realtime/channel-policy'
-import { createRealtimeApi, type RealtimeOptions } from '@/platform/realtime/stream-api'
+import { describe, expect, it } from 'vitest'
+import type { GameView } from '@/modules/dungeon/contracts'
+import { createTestApi } from './testing'
 
-/** Dépendances fournies à l'application par son point d'entrée. */
-export interface ApiDeps {
-  /** Authentification : Better Auth en fonctionnement réel, un adaptateur simplifié en test. */
-  auth: AuthPort
-  /** Journal d'événements, transmis aux modules qui l'utilisent. */
-  store: EventStore
-  /** Attendue avant chaque requête : résolue lorsque la base est prête (migrations). */
-  ready?: Promise<void>
-  /** Horloge de référence ; l'heure réelle par défaut. Remplacée dans les tests. */
-  clock?: () => number
-  /** Réglages du temps réel (durée des flux, intervalle de lecture) ; raccourcis dans les tests. */
-  realtime?: Partial<Omit<RealtimeOptions, 'store' | 'policies'>>
+type TestApi = Awaited<ReturnType<typeof createTestApi>>
+
+/** Ouvre une expédition au nom du premier joueur, que les suivants rejoignent. */
+async function openGame({ post }: TestApi, players: string[]) {
+  const res = await post('/api/dungeon/games', {}, players[0])
+  const { gameId } = (await res.json()) as { gameId: string }
+  for (const player of players.slice(1)) {
+    await post(`/api/dungeon/games/${gameId}/join`, {}, player)
+  }
+  return gameId
 }
 
-/**
- * Racine de composition : le seul endroit du projet qui connaît à la fois
- * la plateforme technique et l'ensemble des modules.
- * Ajouter un module consiste à l'instancier ici, puis à monter son API.
- */
-export function createApi({ auth, store, ready, clock, realtime }: ApiDeps) {
-  // 1. Instanciation des modules, avec les dépendances fournies par la plateforme.
-  const system = createSystemModule()
-  const realm = createRealmModule({ store, clock })
-  const dungeon = createDungeonModule({ store, clock })
-
-  // Règles d'accès aux canaux temps réel, déclarées par les modules.
-  const policies: ChannelPolicy[] = [realm.channelPolicy, dungeon.channelPolicy]
-
-  // 2. Application principale : toutes ses routes sont préfixées par /api.
-  const app = new Hono<AppEnv>().basePath('/api')
-
-  // 3. Aucune requête n'est traitée avant que la base de données soit prête.
-  //    La promesse n'est réellement attendue qu'au démarrage ; ensuite, elle est déjà résolue.
-  app.use(async (_c, next) => {
-    await ready
-    await next()
-  })
-
-  // 4. Toute erreur non prévue produit une réponse JSON uniforme,
-  //    sans divulguer de détail technique au client.
-  app.onError((error, c) => {
-    console.error(error)
-    return c.json({ error: { code: 'INTERNAL', message: 'Erreur interne' } }, 500)
-  })
-
-  // Une adresse inconnue produit elle aussi une réponse JSON, et non une page HTML.
-  app.notFound((c) => c.json({ error: { code: 'NOT_FOUND', message: 'Route inconnue' } }, 404))
-
-  // 5. Routes d'authentification (inscription, connexion, déconnexion, session),
-  //    entièrement traitées par l'adaptateur d'authentification.
-  app.on(['GET', 'POST'], '/auth/*', (c) => auth.handler(c.req.raw))
-
-  // 6. Routes réservées aux joueurs connectés : toute requête anonyme est refusée (401).
-  //    Chaque nouveau module dont les routes sont réservées aux joueurs est ajouté ici.
-  app.use('/realm/*', requireUser(auth))
-  app.use('/dungeon/*', requireUser(auth))
-  app.use('/stream/*', requireUser(auth))
-
-  // 7. Montage des sous-applications : chaque module reçoit son propre préfixe.
-  //    Les appels sont chaînés afin que TypeScript conserve le type de chaque route.
-  return app
-    .route('/system', system.api)
-    .route('/realm', realm.api)
-    .route('/dungeon', dungeon.api)
-    .route('/stream', createRealtimeApi({ store, policies, ...realtime }))
+/** Lance l'expédition, puis ouvre les portes à tour de rôle jusqu'au premier combat. */
+async function untilCombat(api: TestApi, players: string[]) {
+  const gameId = await openGame(api, players)
+  await api.post(`/api/dungeon/games/${gameId}/start`, {}, players[0])
+  for (;;) {
+    const view = await viewOf(api, gameId, players[0])
+    if (view.phase === 'combat') return { gameId, view }
+    await api.post(`/api/dungeon/games/${gameId}/door`, {}, view.turnHeroId)
+  }
 }
 
-/** Type de l'application complète, déduit de ses routes. */
-export type Api = ReturnType<typeof createApi>
+/** Vue d'une expédition pour un joueur. */
+async function viewOf({ get }: TestApi, gameId: string, player: string) {
+  const res = await get(`/api/dungeon/games/${gameId}`, player)
+  return ((await res.json()) as { view: GameView }).view
+}
+
+describe('API du module Donjon', () => {
+  it('ouvre une expédition (201) et la propose parmi les expéditions ouvertes', async () => {
+    const api = await createTestApi()
+    const res = await api.post('/api/dungeon/games', {})
+    expect(res.status).toBe(201)
+    const { gameId } = await res.json()
+
+    const list = await (await api.get('/api/dungeon/games', 'bob')).json()
+    expect(list.games).toMatchObject([{ gameId, hostName: 'alice', heroCount: 1 }])
+  })
+
+  it("ne laisse que l'hôte lancer l'expédition (403)", async () => {
+    const api = await createTestApi()
+    const gameId = await openGame(api, ['alice', 'bob'])
+
+    const refused = await api.post(`/api/dungeon/games/${gameId}/start`, {}, 'bob')
+    expect(refused.status).toBe(403)
+    expect(await refused.json()).toEqual({ error: { code: 'NOT_HOST' } })
+
+    const started = await api.post(`/api/dungeon/games/${gameId}/start`, {}, 'alice')
+    expect(started.status).toBe(200)
+    expect((await (await api.get('/api/dungeon/games')).json()).games).toEqual([])
+  })
+
+  it('renvoie une erreur 404 pour une expédition inconnue', async () => {
+    const api = await createTestApi()
+    const res = await api.get('/api/dungeon/games/inconnue')
+    expect(res.status).toBe(404)
+    expect(await res.json()).toEqual({ error: { code: 'GAME_NOT_FOUND' } })
+  })
+
+  it('rejette une action mal formée avant tout appel au service (400)', async () => {
+    const api = await createTestApi()
+    const { gameId, view } = await untilCombat(api, ['alice'])
+    const res = await api.post(`/api/dungeon/games/${gameId}/action`, {
+      round: view.round,
+      action: { type: 'fuir' },
+    })
+    expect(res.status).toBe(400)
+  })
+
+  it("ne révèle pas l'action d'un héros aux autres joueurs", async () => {
+    const api = await createTestApi()
+    const { gameId, view } = await untilCombat(api, ['alice', 'bob'])
+    await api.post(`/api/dungeon/games/${gameId}/action`, {
+      round: view.round,
+      action: { type: 'defend' },
+    })
+
+    const seenByBob = await viewOf(api, gameId, 'bob')
+    expect(seenByBob.heroes[0]).toMatchObject({ id: 'alice', ready: true, action: null })
+    const seenByAlice = await viewOf(api, gameId, 'alice')
+    expect(seenByAlice.heroes[0]).toMatchObject({ action: { type: 'defend' } })
+  })
+
+  it("fait défendre, à l'échéance, les héros qui n'ont rien choisi", async () => {
+    const api = await createTestApi()
+    const { gameId, view } = await untilCombat(api, ['alice', 'bob'])
+    api.advance(0.5)
+    const res = await api.post(`/api/dungeon/games/${gameId}/deadline`, {}, 'bob')
+    const { view: after } = (await res.json()) as { view: GameView }
+
+    expect(after.lastRound?.round).toBe(view.round)
+    expect(after.lastRound?.actions).toEqual({ alice: { type: 'defend' }, bob: { type: 'defend' } })
+  })
+})
+
+describe("Contrôle d'accès à l'API du Donjon", () => {
+  it('refuse toute requête anonyme (401)', async () => {
+    const api = await createTestApi()
+    expect((await api.get('/api/dungeon/games', null)).status).toBe(401)
+    expect((await api.post('/api/dungeon/games', {}, null)).status).toBe(401)
+  })
+})
+
+describe('Écritures concurrentes sur une expédition', () => {
+  it('enregistre les actions de quatre héros envoyées au même instant', async () => {
+    const api = await createTestApi()
+    const players = ['alice', 'bob', 'carol', 'dan']
+    const { gameId, view } = await untilCombat(api, players)
+
+    const responses = await Promise.all(
+      players.map((player) =>
+        api.post(
+          `/api/dungeon/games/${gameId}/action`,
+          { round: view.round, action: { type: 'defend' } },
+          player,
+        ),
+      ),
+    )
+    expect(responses.map((res) => res.status)).toEqual([200, 200, 200, 200])
+    // Les quatre actions ont été prises en compte : la manche a été résolue.
+    const after = await viewOf(api, gameId, 'alice')
+    expect(Object.keys(after.lastRound?.actions ?? {})).toHaveLength(4)
+  })
+
+  it("n'enregistre qu'une résolution pour deux commandes d'échéance simultanées", async () => {
+    const api = await createTestApi()
+    const { gameId, view } = await untilCombat(api, ['alice', 'bob'])
+    api.advance(0.5)
+
+    const responses = await Promise.all(
+      ['alice', 'bob'].map((player) =>
+        api.post(`/api/dungeon/games/${gameId}/deadline`, {}, player),
+      ),
+    )
+    expect(responses.map((res) => res.status)).toEqual([200, 200])
+    const after = await viewOf(api, gameId, 'alice')
+    expect(after.round).toBe(view.round + 1)
+  })
+})
