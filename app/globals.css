@@ -1,33 +1,65 @@
-/* Palette du jeu : toute modification de l'apparence commence ici. */
+/*
+ * Palette du jeu : toute modification de l'apparence commence ici.
+ * Direction artistique : un royaume de chats en dark fantasy. Le thème clair est le
+ * crépuscule (ciel orangé, bois chaud), le thème sombre la nuit (ciel indigo, lanternes).
+ * Les couleurs des décors dessinés sont dans app/art.css.
+ */
 :root {
-  --bg: #f6f1e7;
-  --panel: #fffaf0;
-  --ink: #2b2118;
-  --muted: #7a6a58;
-  --accent: #8a5a2b;
-  --ok: #3f7d3a;
-  --warn: #b5562f;
-  --radius: 12px;
-  font-family: system-ui, sans-serif;
+  --bg: #2a1d22;
+  --panel: rgb(48 28 32 / 0.92);
+  --ink: #f6ead8;
+  --muted: #d0b8a8;
+  --accent: #ff9a4d;
+  --on-accent: #1a0f0a;
+  --magic: #ffd08a;
+  --ok: #8fe08a;
+  --warn: #ff8a7a;
+  --frame: rgb(240 190 110 / 0.55);
+  --title-font: Cinzel, 'Palatino Linotype', Palatino, Georgia, serif;
+  --radius: 14px;
+  color-scheme: dark;
+  font-family: 'Alegreya Sans', system-ui, sans-serif;
   color: var(--ink);
   background: var(--bg);
 }
 
-/* Variante appliquée lorsque le système de l'utilisateur est en thème sombre. */
+/*
+ * Thème de la nuit. Il s'applique lorsque le joueur l'a choisi (data-theme="dark"), ou
+ * lorsque le système est en thème sombre et que le joueur n'a pas choisi le crépuscule.
+ */
+:root[data-theme='dark'] {
+  --bg: #0d0a13;
+  --panel: rgb(20 14 28 / 0.92);
+  --ink: #ece2d0;
+  --muted: #a596b3;
+  --accent: #ff8a3d;
+  --magic: #f0c27a;
+  --ok: #7cf08f;
+  --warn: #ff6b6b;
+  --frame: rgb(212 166 74 / 0.55);
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1d1915;
-    --panel: #28221c;
-    --ink: #f2e8da;
-    --muted: #b3a38f;
-    --accent: #d79b5b;
+  :root:not([data-theme='light']) {
+    --bg: #0d0a13;
+    --panel: rgb(20 14 28 / 0.92);
+    --ink: #ece2d0;
+    --muted: #a596b3;
+    --accent: #ff8a3d;
+    --magic: #f0c27a;
+    --ok: #7cf08f;
+    --warn: #ff6b6b;
+    --frame: rgb(212 166 74 / 0.55);
   }
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); }
-main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+body { margin: 0; background: var(--bg); transition: background 0.6s; }
+main { max-width: 1240px; margin: 0 auto; padding: 16px 20px 48px; }
 h1 { margin: 0 0 4px; font-size: 1.6rem; }
+/* Titres dans un style de grimoire. */
+h1, h2 { font-family: var(--title-font); color: var(--magic); text-shadow: 0 0 12px rgb(240 120 40 / 0.35); }
+h2 { margin: 2px 0 6px; font-size: 1.3rem; }
 
 /* Classes utilitaires réutilisées par les modules. */
 .muted { color: var(--muted); }
@@ -35,21 +67,33 @@ h1 { margin: 0 0 4px; font-size: 1.6rem; }
 .panel {
   background: var(--panel);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 16px 18px;
   margin-top: 16px;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+  border: 1px solid var(--frame);
+  box-shadow: inset 0 0 0 3px rgb(0 0 0 / 0.3), 0 12px 30px rgb(0 0 0 / 0.35);
 }
+/* Surtitre, lignes « libellé : valeur » et jauge des panneaux. */
+.kicker { margin: 0; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.line { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; }
+.gauge { height: 8px; border-radius: 99px; background: rgb(255 255 255 / 0.1); overflow: hidden; margin: 4px 0 8px; }
+.gauge > div { height: 100%; background: linear-gradient(90deg, #c2263b, #ff7a2f); transition: width 0.5s; }
 .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 
 button {
   font: inherit;
-  border: 0;
-  border-radius: 8px;
+  font-weight: 700;
+  border: 1px solid #ffb27a;
+  border-radius: 10px;
   padding: 8px 14px;
-  background: var(--accent);
-  color: white;
+  min-height: 40px;
+  background: linear-gradient(180deg, #ffb46a, #e0601f);
+  color: var(--on-accent);
   cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
 }
+button:not(:disabled):hover { box-shadow: 0 0 14px rgb(255 140 60 / 0.6); }
+button:not(:disabled):active { transform: scale(0.96); }
+button.wide { width: 100%; margin-top: 8px; font-family: var(--title-font); }
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Entités du jeu (couche de thème). */
@@ -58,12 +102,12 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Formulaires. */
 form { display: grid; gap: 10px; max-width: 340px; }
-input {
+input, select {
   font: inherit;
   padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--muted);
-  background: transparent;
+  border-radius: 10px;
+  border: 1px solid var(--frame);
+  background: rgb(0 0 0 / 0.3);
   color: inherit;
 }
 
@@ -77,18 +121,25 @@ input {
 /* Navigation de l'espace de jeu. */
 .nav {
   display: flex;
-  gap: 16px;
+  gap: 6px 14px;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--muted) 30%, transparent);
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--panel);
+  border: 1px solid var(--frame);
+  box-shadow: inset 0 0 0 3px rgb(0 0 0 / 0.3);
+  font-family: var(--title-font);
 }
-.nav a { color: var(--ink); text-decoration: none; }
-.nav a[aria-current='page'] { color: var(--accent); font-weight: 600; }
+.nav a { color: var(--ink); text-decoration: none; padding: 6px 10px; border-radius: 8px; font-weight: 600; }
+.nav a[aria-current='page'] { color: var(--on-accent); background: var(--accent); font-weight: 700; }
 
 /* Bouton présenté comme un lien. */
-button.link { background: none; color: var(--accent); padding: 0; }
+button.link { background: none; border: 0; min-height: 0; color: var(--accent); padding: 0; box-shadow: none; }
+
+/* Choix du thème (jour, nuit, système). */
+.theme-toggle { white-space: nowrap; }
 
 /* Indicateur de connexion temps réel. */
 .status { font-size: 0.85rem; color: var(--muted); }
@@ -124,4 +175,4 @@ input.amount { width: 5em; }
 .presence { list-style: none; padding: 0; margin: 0; display: grid; gap: 4px; }
 
 /* Mes données : un lien présenté comme un bouton */
-a.button { display: inline-block; padding: 8px 14px; border-radius: 8px; background: var(--accent); color: white; text-decoration: none; }
+a.button { display: block; margin-top: 8px; padding: 10px 14px; border-radius: 10px; text-align: center; font-family: var(--title-font); font-weight: 700; background: linear-gradient(180deg, #ffb46a, #e0601f); color: var(--on-accent); text-decoration: none; }

@@ -4,6 +4,7 @@ import { type FormEvent, useState } from 'react'
 import { HealthStatus } from '@/modules/system/ui'
 import { authClient } from '@/platform/auth/client'
 import { Entity } from '@/ui/entity'
+import { ThemeToggle } from '@/ui/theme-toggle'
 
 /**
  * Messages affichés pour les erreurs renvoyées par Better Auth.
@@ -51,9 +52,12 @@ export default function LoginPage() {
 
   return (
     <>
-      <h1>
-        <Entity kind="village" /> Royaumes
-      </h1>
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <h1>
+          <Entity kind="village" /> Royaumes
+        </h1>
+        <ThemeToggle />
+      </div>
       <p className="muted">{mode === 'signIn' ? 'Connexion' : 'Création de compte'}</p>
       <div className="panel">
         <form onSubmit={submit}>

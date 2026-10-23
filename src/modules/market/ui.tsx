@@ -3,6 +3,12 @@ import { hc } from 'hono/client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { RESOURCES, type Resource } from '@/modules/realm/contracts'
 import { useChannel } from '@/platform/realtime/use-channel'
+import { CatAvatar } from '@/ui/art/cat-avatar'
+import { lookOf } from '@/ui/art/color'
+import { Coins } from '@/ui/art/effects'
+import { MarketBackdrop, StallArt } from '@/ui/art/market-street'
+import { at, Scene } from '@/ui/art/scene'
+import { useFlash } from '@/ui/art/use-flash'
 import { Entity } from '@/ui/entity'
 import { look } from '@/ui/theme'
 import type { MarketApi } from './api'
@@ -65,6 +71,13 @@ function AmountsText({ amounts }: { amounts: Amounts }) {
   )
 }
 
+/** Étals dessinés dans la rue : les trois premières offres des autres joueurs. */
+const STALLS = [
+  { left: '3%', awning: '#6a1a2a', stripe: '#e9dcc3' },
+  { left: '23%', awning: '#24324a', stripe: '#d4a64a' },
+  { left: '43%', awning: '#3a1a5a', stripe: '#9b6bff' },
+]
+
 /** Compte rendu d'une commande, à partir de la vue de l'offre renvoyée par l'API. */
 function outcomeOf(view: OfferView): string {
   if (view.missing && view.status === 'open') {
@@ -89,6 +102,10 @@ export function MarketScreen() {
     resource: 'stone',
     amount: 25,
   })
+
+  // Offre choisie sur un étal, et pièces qui jaillissent quand un échange aboutit.
+  const [chosen, setChosen] = useState<string | null>(null)
+  const [coins, fireCoins] = useFlash<string>(1500)
 
   // REQUÊTE : la consultation distribue la boîte d'envoi, puis rattrape la projection.
   const refresh = useCallback(async () => {
@@ -128,6 +145,9 @@ export function MarketScreen() {
       setMessage({ text: ERRORS[body.error.code as keyof typeof ERRORS] ?? 'Erreur.', error: true })
     } else {
       setMessage({ text: outcomeOf(body.view), error: body.view.status === 'rejected' })
+      if (body.view.status === 'settling' || body.view.status === 'completed') {
+        fireCoins(body.view.offerId)
+      }
     }
     await refresh()
   }
@@ -145,6 +165,8 @@ export function MarketScreen() {
 
   const mine = list?.offers.filter((offer) => offer.mine) ?? []
   const others = list?.offers.filter((offer) => !offer.mine) ?? []
+  const stalls = others.slice(0, STALLS.length)
+  const picked = others.find((offer) => offer.offerId === chosen) ?? stalls[0]
 
   /** Sélecteur d'une ressource et de sa quantité. */
   const picker = (
@@ -187,18 +209,81 @@ export function MarketScreen() {
         </span>
       </div>
 
-      <div className="panel row">
-        {picker('Je cède', give, setGive)}
-        {picker('contre', want, setWant)}
-        <button type="button" onClick={publish}>
-          Publier l'offre
-        </button>
-      </div>
-      {message && (
-        <p className={message.error ? 'error' : 'muted'} role="status">
-          {message.text}
-        </p>
-      )}
+      <Scene
+        label="Rue du marché"
+        art="art-mkt"
+        backdrop={<MarketBackdrop />}
+        overlay={
+          <>
+            {picked && (
+              <div className="panel">
+                <p className="kicker">Étal de {picked.sellerName}</p>
+                <h2>
+                  <AmountsText amounts={picked.give} />
+                </h2>
+                <div className="line">
+                  <span>En échange de</span>
+                  <strong>
+                    <AmountsText amounts={picked.want} />
+                  </strong>
+                </div>
+                <button type="button" className="wide" onClick={() => acceptOffer(picked.offerId)}>
+                  Accepter l'échange
+                </button>
+              </div>
+            )}
+            <div className="panel">
+              <h2>Ouvrir votre étal</h2>
+              <div className="row">
+                {picker('Je cède', give, setGive)}
+                {picker('contre', want, setWant)}
+              </div>
+              <button type="button" className="wide" onClick={publish}>
+                Publier l'offre
+              </button>
+              {message && (
+                <p className={message.error ? 'error' : 'muted'} role="status">
+                  {message.text}
+                </p>
+              )}
+            </div>
+          </>
+        }
+      >
+        {stalls.map((offer, index) => {
+          const stall = STALLS[index]
+          const goods = Object.keys(offer.give)[0] ?? 'wood'
+          return (
+            <button
+              key={offer.offerId}
+              type="button"
+              className="stall"
+              aria-pressed={picked?.offerId === offer.offerId}
+              aria-label={`Étal de ${offer.sellerName}`}
+              style={at(stall.left, '34%', { width: '19%' })}
+              onClick={() => setChosen(offer.offerId)}
+            >
+              <span className="stall-seller">
+                <CatAvatar
+                  {...lookOf(offer.sellerName)}
+                  size={100}
+                  helmet={false}
+                  armor={false}
+                  weapon={false}
+                  label=""
+                />
+              </span>
+              <StallArt goods={goods} awning={stall.awning} stripe={stall.stripe} />
+              <span className="stall-price">
+                <AmountsText amounts={offer.want} />
+              </span>
+              <span className="tag">{offer.sellerName}</span>
+            </button>
+          )
+        })}
+        {/* L'offre acceptée quitte la rue : les pièces jaillissent au milieu de la place. */}
+        {coins && <Coins key={coins.n} left="30%" top="55%" />}
+      </Scene>
 
       <section className="panel" aria-label="Vos offres">
         <h2>Vos offres</h2>
