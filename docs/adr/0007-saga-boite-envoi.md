@@ -1,6 +1,7 @@
-# ADR-NNNN - Titre de la décision
-
-Le titre énonce la décision : les opérations qui concernent plusieurs modules sont des sagas orchestrées, dont les messages transitent par une boîte d'envoi transactionnelle. Le statut est « accepté ».
+# ADR-0007 - Les opérations entre modules sont des sagas orchestrées, dont les messages transitent par une boîte d'envoi transactionnelle
+ 
+- Statut : accepté
+- Date : 2026-10-21
 
 ## Contexte
 
@@ -40,9 +41,20 @@ Au moins trois, avec la raison de leur rejet : une transaction unique englobant 
 
 ## Réexamen
 
-Les conditions dans lesquelles la décision devrait être revue : par exemple, l'extraction d'un module dans un service distinct, qui demanderait une boîte d'envoi par base et un transport entre services ; un volume de messages qui justifierait un courtier de messages dédié ; un besoin de latence que la distribution déclenchée par les requêtes ne satisfait plus.
-
+Cette décision devra être réexaminée :
+ 
+- lors de l'extraction d'un module dans un service distinct, qui demandera une boîte
+  d'envoi par base et un transport entre services ;
+- si le volume de messages justifie un courtier de messages dédié ;
+- si un besoin de latence n'est plus satisfait par une distribution déclenchée par les
+  requêtes.
+  
 ## Usage de l'IA générative
 
-Outil utilisé, nature de sa contribution, manière dont le résultat a été vérifié.
-Indiquer « Aucun » le cas échéant.
+
+Claude (Anthropic), le 2026-10-22 : rédaction des rubriques Conséquences, Alternatives
+écartées et Réexamen, ainsi que de l'en-tête (titre, statut, date), à partir des éléments
+imposés par la sous-partie 5.1 du TD9 et de la lecture du code (`src/platform/outbox/`,
+`src/modules/market/`). Les rubriques Contexte et Décision reprennent l'énoncé du TD.
+Vérification par l'auteur : relecture, et contrôle des valeurs de dix tentatives et de
+trente secondes de bail dans `src/platform/outbox/outbox.ts`.

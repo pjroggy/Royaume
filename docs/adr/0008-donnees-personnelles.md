@@ -1,6 +1,6 @@
-# ADR-NNNN - Titre de la décision
-
-- Statut : un stockage classique pour la Taverne, et la réécriture ciblée des champs personnels du journal pour l'effacement. Le statut est « accepté ».
+# ADR-0008 - Un stockage classique pour la Taverne, et la réécriture ciblée des champs personnels du journal pour l'effacement
+ 
+- Statut : accepté
 - Date : 2026-10-21
 
 ## Contexte
@@ -40,9 +40,18 @@ Au moins trois, avec la raison de leur rejet : l'Event Sourcing pour la Taverne 
 
 ## Réexamen
 
-Les conditions dans lesquelles la décision devrait être revue : par exemple, la conception d'un nouveau module, pour lequel les références sans copie devraient être préférées dès l'origine ; un journal dont la taille rendrait l'effacement trop long pour une requête ; une évolution de la doctrine sur l'anonymisation des identifiants pseudonymes.
+Cette décision devra être réexaminée :
+ 
+- lors de la conception d'un nouveau module, pour lequel les références sans copie
+  devraient être préférées dès l'origine ;
+- si le journal atteint une taille qui rend l'effacement trop long pour une requête ;
+- si la doctrine sur l'anonymisation des identifiants pseudonymes évolue.
 
 ## Usage de l'IA générative
 
-Outil utilisé, nature de sa contribution, manière dont le résultat a été vérifié.
-Indiquer « Aucun » le cas échéant.
+Claude (Anthropic), le 2026-10-22 : rédaction des rubriques Conséquences, Alternatives
+écartées et Réexamen, et correction de l'en-tête (titre, statut), à partir des éléments
+imposés par la sous-partie 5.1 du TD10 et de la lecture du code (`src/platform/privacy/`,
+`src/modules/tavern/`). Les rubriques Contexte et Décision reprennent l'énoncé du TD.
+Vérification par l'auteur : relecture, et contrôle des durées de trente jours et de deux
+minutes dans `src/modules/tavern/domain/`.

@@ -1,7 +1,7 @@
-# ADR-NNNN - Titre de la décision
+# ADR-0006 - Séparer les modèles de lecture du modèle d'écriture, tenus à jour par des projections rattrapées à la lecture
 
-- Statut : proposé | accepté | remplacé par ADR-XXXX | abandonné
-- Date : AAAA-MM-JJ
+- Statut : accepté
+- Date : 2026-10-21
 
 ## Contexte
 
@@ -39,9 +39,19 @@ Au moins trois, avec la raison de leur rejet : la mise à jour des modèles de l
 
 ## Réexamen
 
-Les conditions dans lesquelles la décision devrait être revue : par exemple, une reconstruction qui approche la durée maximale d'une fonction, un nombre de consultations simultanées tel que le verrou du point de reprise devient un goulet d'étranglement, ou un besoin de lecture strictement à jour.
+Cette décision devra être réexaminée :
+ 
+- si la reconstruction d'une projection approche la durée maximale d'une fonction : elle
+  devrait alors être exécutée par un script hors consultation, avant la mise en service ;
+- si le nombre de consultations simultanées fait du verrou du point de reprise un goulet
+  d'étranglement ;
+- si un besoin de lecture strictement à jour apparaît.
 
 ## Usage de l'IA générative
 
-Outil utilisé, nature de sa contribution, manière dont le résultat a été vérifié.
-Indiquer « Aucun » le cas échéant.
+Claude (Anthropic), le 2026-10-22 : rédaction des rubriques Conséquences, Alternatives
+écartées et Réexamen, ainsi que du titre, du statut et de la date, à partir des éléments
+imposés par la sous-partie 5.1 du TD8 et de la lecture du code (`src/platform/projection/`).
+Les rubriques Contexte et Décision reprennent l'énoncé du TD. Vérification par l'auteur :
+relecture, et contrôle du délai de cinq secondes (`gapGraceMs`) dans
+`src/platform/projection/projection.ts`.
