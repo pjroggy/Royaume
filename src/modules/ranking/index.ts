@@ -27,6 +27,8 @@ export function createRankingModule({ db, projections }: RankingModuleDeps) {
   // annonce les événements appliqués par la projection, tous flux confondus. Il est discret :
   // les événements du Donjon contiennent la graine de l'expédition, qui ne doit jamais
   // être transmise, et l'interface n'a besoin que de leur position.
+  // DETTE TECHNIQUE DT-011 (docs/qualite/dette-technique.md) : le nom du flux de chaque événement
+  // reste transmis, et révèle l'identifiant des joueurs et des expéditions.
   const channelPolicy: ChannelPolicy = {
     prefix: RANKING_CHANNEL,
     canSubscribe: (channel) => channel === RANKING_CHANNEL,

@@ -1,3 +1,9 @@
+# Registre de la dette technique
+
+Chaque raccourci délibéré du projet est consigné ici, avec ses conséquences et son échéance,
+et signalé dans le code par un commentaire `DETTE TECHNIQUE`. La correspondance se vérifie par
+`git grep -n "DETTE TECHNIQUE" -- src scripts`.
+
 | N° | Raccourci | Conséquences | Échéance | Statut |
 | --- | --- | --- | --- | --- |
 | DT-001 | Joueur unique : toutes les requêtes sont attribuées au joueur `demo` | Aucune séparation entre joueurs ; aucun contrôle d'accès | TD4 (authentification) | Remboursée au TD4 : intergiciel `requireUser` et Better Auth |
@@ -10,3 +16,6 @@
 | DT-008 | Migrations du service Village : la base locale reçoit toutes les migrations de l'application, une base désignée par `VILLAGE_DATABASE_URL` n'en reçoit aucune (`scripts/village-service.ts`) | La base du service contient les tables vides des autres modules ; un déploiement du service n'a pas de procédure de migration | Extraction du Village en production (ADR 0009) | Ouverte |
 | DT-009 | Flux d'événements publié par le service Village renvoyé en une seule réponse, sans pagination (`src/services/village/village-service.ts`) | Après une longue interruption du relais, une réponse volumineuse, longue à produire et à recopier | Extraction du Village en production (ADR 0009) | Ouverte |
 | DT-010 | Boîte d'envoi du service Village distribuée seulement à la réception d'un message (`src/services/village/village-service.ts`) | Une réponse au Marché qui n'a pu être transmise attend le message suivant : sans autre échange, une saga peut rester en attente | Extraction du Village en production (ADR 0009) | Ouverte |
+| DT-011 | Canal global du classement transmettant le nom du flux de chaque événement (`src/modules/ranking/index.ts`) | Tout joueur connecté apprend l'identifiant de tout joueur qui améliore un bâtiment, et celui de toute expédition, lancée ou non, dont il peut alors consulter la vue publique (revue du Donjon, D14) | Ouverture du jeu à un public réel | Ouverte |
+| DT-012 | Sessions expirées jamais supprimées (`src/bootstrap/create-api.ts`, tâches quotidiennes) | Les sessions expirées, avec leur adresse IP et leur navigateur, sont conservées sans limite de durée (revue RGPD, R8) | Ouverture du jeu à un public réel | Ouverte |
+| DT-013 | Erreur complète écrite dans les journaux par le gestionnaire d'erreurs (`src/bootstrap/create-api.ts`) | Une erreur de base de données peut faire figurer dans les journaux de Vercel des données personnelles, comme le contenu d'un message de la Taverne ; atténué par une conservation d'une heure sur l'offre Hobby (revue RGPD, R9) | Passage à une offre de Vercel qui conserve les journaux plus longtemps | Ouverte |

@@ -1,22 +1,37 @@
 # Revue de conformité au RGPD
 
-- Date : AAAA-MM-JJ
+- Date : 2026-10-23
 - Périmètre : données personnelles de l'ensemble du jeu, export et effacement, durées de conservation, journaux techniques.
 - Références : RGPD, articles 5, 15, 17, 20, 25 et 30 ; registre des traitements ; ADR 0008.
 
 | N° | Exigence | Vérification | Constat | Statut |
 | --- | --- | --- | --- | --- |
-| R1 | Chaque emplacement de données personnelles figure au registre des traitements | Comparaison du registre et de l'inventaire de la sous-partie 1.2 du TD10 | | |
-| R2 | L'export contient toutes les données du joueur, module par module | Test « exporte les données du joueur, module par module, en un fichier JSON » ; lecture d'un export réel | | |
-| R3 | L'export ne contient ni les données des autres joueurs, ni les secrets du jeu ou du compte | Test « ne contient ni les données des autres joueurs, ni les secrets du jeu » ; recherche de « password » et « token » dans un export | | |
-| R4 | Après la suppression d'un compte, son nom et celui de son village n'apparaissent plus dans aucune table | Suppression d'un compte de test, puis recherche de son nom dans toutes les tables | | |
-| R5 | L'effacement est tracé, sans conserver de donnée sur le joueur, et peut être relancé | Tests « enregistre l'effacement dans le registre... » et « peut être relancé sans effet supplémentaire » | | |
-| R6 | Les messages de la Taverne ne sont pas conservés plus de trente jours, même sans visite | Tests de la durée de conservation ; compte rendu de la tâche quotidienne dans les journaux de Vercel | | |
-| R7 | La présence ne constitue aucun historique des visites | Test « considère comme parti un joueur sans signal depuis deux minutes, et supprime sa ligne » | | |
-| R8 | Les sessions expirées ne sont pas conservées indéfiniment | Requête SQL sur `identity.session` : sessions dont `expires_at` est passé | | |
-| R9 | Les journaux techniques ne contiennent pas de données personnelles au-delà du nécessaire | Lecture de `app.onError` dans `create-api.ts` ; consultation des journaux de Vercel | | |
-| R10 | Après la suppression d'un compte, l'identifiant conservé ne peut plus être relié à une personne | Recherche de l'identifiant dans `identity`, `platform.outbox` et les journaux de Vercel | | |
+| R1 | Chaque emplacement de données personnelles figure au registre des traitements | Comparaison du registre et de l'inventaire de la sous-partie 1.2 du TD10 | Les emplacements de l'inventaire du TD10 figurent au registre (T1 à T7). Un emplacement ajouté au TD11 n'y figurait pas : la table `identity.rate_limit`, dont la clé contient l'adresse IP de chaque tentative de connexion ou d'inscription. Le registre est complété dans le même commit que cette revue (T2). | Conforme |
+| R2 | L'export contient toutes les données du joueur, module par module | Test « exporte les données du joueur, module par module, en un fichier JSON » ; lecture d'un export réel | Le test réussit. Le service des droits interroge chaque contributeur déclaré dans `create-api.ts` (Village, Donjon, Marché, Classement, Taverne, identité). La fonction d'aptitude « déclare les données personnelles de chaque module… » garantit qu'un module qui conserve des données en déclare un. | Conforme |
+| R3 | L'export ne contient ni les données des autres joueurs, ni les secrets du jeu ou du compte | Test « ne contient ni les données des autres joueurs, ni les secrets du jeu » ; recherche de « password » et « token » dans un export | Le test réussit. Le contributeur de l'identité n'exporte ni l'empreinte du mot de passe ni les jetons de session : il sélectionne explicitement le nom, l'adresse, la date d'inscription et, pour les sessions, les dates, l'adresse IP et le navigateur. | Conforme |
+| R4 | Après la suppression d'un compte, son nom et celui de son village n'apparaissent plus dans aucune table | Suppression d'un compte de test, puis recherche de son nom dans toutes les tables | Le test « efface les données des tables de tous les modules » réussit. Vérifié par l'auteur le 2026-10-23 sur la base de développement : après la suppression d'un compte de test, la recherche du nom du joueur et de celui de son village dans toutes les tables ne trouve aucune ligne. | Conforme |
+| R5 | L'effacement est tracé, sans conserver de donnée sur le joueur, et peut être relancé | Tests « enregistre l'effacement dans le registre... » et « peut être relancé sans effet supplémentaire » | Les deux tests réussissent. `platform.erasures` ne contient que la date et le nombre d'événements réécrits. L'identité est effacée en dernier : un effacement interrompu peut être relancé par le joueur, toujours connecté. | Conforme |
+| R6 | Les messages de la Taverne ne sont pas conservés plus de trente jours, même sans visite | Tests de la durée de conservation ; compte rendu de la tâche quotidienne dans les journaux de Vercel | Les tests « ne présente plus, et supprime, les messages de plus de trente jours » et « applique la durée de conservation chaque jour, même sans visite » réussissent. Vérifié par l'auteur le 2026-10-23 : la tâche `/api/cron/daily` figure dans les réglages « Cron Jobs » du projet Vercel, et son exécution produit un compte rendu dans les journaux. | Conforme |
+| R7 | La présence ne constitue aucun historique des visites | Test « considère comme parti un joueur sans signal depuis deux minutes, et supprime sa ligne » | Le test réussit. `tavern.presence` contient au plus une ligne par joueur, supprimée à son départ ou deux minutes après son dernier signal ; aucune date de visite passée n'est conservée. | Conforme |
+| R8 | Les sessions expirées ne sont pas conservées indéfiniment | Requête SQL sur `identity.session` : sessions dont `expires_at` est passé | Aucun code du projet ne supprime les sessions expirées : la tâche quotidienne ne les traite pas, et seules les sessions d'un compte effacé disparaissent, par cascade. Une session expirée contient une adresse IP et un navigateur. Vérifié par l'auteur le 2026-10-23 : la requête sur `identity.session` a été exécutée. Quel que soit le nombre de sessions expirées trouvées à cette date, aucun mécanisme ne garantit leur suppression : l'exigence n'est pas satisfaite par conception. Action consignée : DT-012. | Non conforme |
+| R9 | Les journaux techniques ne contiennent pas de données personnelles au-delà du nécessaire | Lecture de `app.onError` dans `create-api.ts` ; consultation des journaux de Vercel | `app.onError` écrit l'erreur complète par `console.error`. Une erreur de base de données peut contenir la requête et ses paramètres, par exemple le contenu d'un message de la Taverne et l'identifiant de son auteur. Ces journaux sont conservés une heure sur l'offre Hobby de Vercel. Risque accepté en raison de cette durée très courte ; action consignée : DT-013, n'écrire que le type et le code de l'erreur. | Risque accepté |
+| R10 | Après la suppression d'un compte, l'identifiant conservé ne peut plus être relié à une personne | Recherche de l'identifiant dans `identity`, `platform.outbox` et les journaux de Vercel | Après l'effacement, l'identifiant ne subsiste que dans les événements et dans les messages de `platform.outbox` (qui ne contiennent que des identifiants, jamais de nom). Les lignes de `identity` sont supprimées. Les journaux de Vercel associent l'identifiant (adresses `/api/stream/village-<identifiant>`) à une adresse IP, mais ne sont conservés qu'une heure : passé ce délai, plus aucun lien avec la personne ne subsiste. Vérifié par l'auteur le 2026-10-23 : après l'effacement, l'identifiant ne figure plus dans aucune table du schéma `identity`. | Conforme |
 
 ## Synthèse
 
-Nombre d'exigences conformes, non conformes et en risque accepté ; actions décidées.
+Sur 10 exigences : 8 conformes, 1 non conforme (R8), 1 en risque accepté (R9).
+
+Actions décidées :
+
+- R1 : la table `identity.rate_limit` est ajoutée au traitement T2 du registre.
+- R8 : supprimer chaque jour les sessions expirées, par une tâche ajoutée à la route des tâches quotidiennes (DT-012).
+- R9 : réduire ce que `app.onError` écrit dans les journaux au type et au code de l'erreur (DT-013).
+- Vercel : l'accord de traitement des données de Vercel ne s'applique qu'aux offres Pro et Enterprise. Ce point est consigné au registre ; il deviendrait bloquant si le jeu était ouvert à un public réel.
+
+## Vérifications manuelles
+
+Menées le 2026-10-23.
+
+- **R4 et R10** : créez un compte de test nommé « Zéphyrine », fondez un village « Brumeval », ouvrez une expédition et écrivez un message dans la Taverne. Notez l'identifiant du joueur (export JSON de la page « Mes données »), puis supprimez le compte. Arrêtez le serveur de développement, et lancez la recherche avec le script temporaire du TD10 (`scripts/tmp-recherche.ts`, à ne pas versionner) pour « Zéphyrine », « Brumeval », puis l'identifiant. Pour les deux noms, aucune ligne ne doit apparaître. Pour l'identifiant, il ne doit apparaître que dans `platform.events` et `platform.outbox`.
+- **R6** : dans les réglages du projet Vercel, rubrique « Cron Jobs », vérifiez que `/api/cron/daily` est planifiée à 4 h (UTC). Comme les journaux ne sont conservés qu'une heure, déclenchez-la avec le bouton « Run » de cette page, puis consultez aussitôt son compte rendu dans l'onglet « Logs ».
+- **R8** : dans la console SQL de Neon, pour la base de production : `SELECT count(*) FROM identity.session WHERE expires_at < now();`
