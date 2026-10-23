@@ -1,0 +1,815 @@
+/*
+ * Décors animés du royaume des chats (src/ui/art). Fichier produit à partir de l'aperçu :
+ * couleurs du jour et de la nuit, puis animations de chaque décor, rangées sous la classe
+ * de son conteneur (.art-map, .art-dun...) pour que deux décors ne se mélangent pas.
+ * Toutes les animations sont coupées pour les joueurs qui demandent moins de mouvement.
+ */
+/* Jour (crépuscule) */
+:root {
+  --art-map-bg: #2a1d22;
+  --art-map-bar: rgba(58,34,38,0.92);
+  --art-map-panel: rgba(48,28,32,0.9);
+  --art-map-ink: #f6ead8;
+  --art-map-muted: #d0b8a8;
+  --art-map-title: #ffd08a;
+  --art-map-titleGlow: rgba(255,150,60,0.4);
+  --art-map-accent: #ff9a4d;
+  --art-map-onAccent: #1a0f0a;
+  --art-map-frame: rgba(240,190,110,0.55);
+  --art-map-frameInner: rgba(0,0,0,0.25);
+  --art-map-track: rgba(255,255,255,0.12);
+  --art-map-sky1: #2a1838;
+  --art-map-sky2: #c25a3a;
+  --art-map-sky3: #f0a050;
+  --art-map-orb: #ffb05a;
+  --art-map-orbCore: #ffd38a;
+  --art-map-orbX: 240;
+  --art-map-stars: 0;
+  --art-map-craters: 0;
+  --art-map-cloud: #d88a7a;
+  --art-map-cloudLight: #ffd0a8;
+  --art-map-cloudOpacity: 0.85;
+  --art-map-gust: rgba(255,240,220,0.6);
+  --art-map-bird: #2a1420;
+  --art-map-mtFarTop: #8a4a5a;
+  --art-map-mtFar: #5a2c44;
+  --art-map-mtMidTop: #5e3040;
+  --art-map-mtMid: #3e2032;
+  --art-map-hillTop: #5a5a34;
+  --art-map-hill: #3e4026;
+  --art-map-snow: #ffd8c0;
+  --art-map-landTop: #6a7240;
+  --art-map-land: #3a4224;
+  --art-map-landShade: #26301a;
+  --art-map-grassLine: #8a9450;
+  --art-map-bank: #7a6448;
+  --art-map-waterTop: #5a7a9a;
+  --art-map-water: #2a4a6a;
+  --art-map-waterHi: #ffd08a;
+  --art-map-reed: #4a5a2a;
+  --art-map-path: #a88a64;
+  --art-map-pathEdge: #5a4632;
+  --art-map-pathLight: #d8bc90;
+  --art-map-stoneLight: #b8aab8;
+  --art-map-stone: #8a7f8f;
+  --art-map-stoneDark: #4a4250;
+  --art-map-pine: #1e2a18;
+  --art-map-pineLight: #4a6234;
+  --art-map-leaf: #3a4a22;
+  --art-map-leafLight: #8a9a48;
+  --art-map-window: #ffcf7a;
+  --art-map-windows: 0.35;
+  --art-map-fog: 0.22;
+  --art-map-vignette: 0.55;
+  --art-map-c1x: 228;
+  --art-map-c2x: 254;
+  --art-map-c3x: 246;
+  --art-map-reflX: 196;
+  --art-map-reflX2: 244;
+  --art-map-reflX3: 290;
+  --art-map-reflX4: 150;
+  --art-map-orbx: 240px;
+}
+:root {
+  --art-dun-bg: #2a1d22;
+  --art-dun-bar: rgba(58,34,38,0.92);
+  --art-dun-panel: rgba(48,28,32,0.9);
+  --art-dun-ink: #f6ead8;
+  --art-dun-muted: #d0b8a8;
+  --art-dun-title: #ffd08a;
+  --art-dun-titleGlow: rgba(255,150,60,0.4);
+  --art-dun-accent: #ff9a4d;
+  --art-dun-onAccent: #1a0f0a;
+  --art-dun-frame: rgba(240,190,110,0.55);
+  --art-dun-frameInner: rgba(0,0,0,0.25);
+  --art-dun-wall1: #3a2a34;
+  --art-dun-wall2: #4a3440;
+  --art-dun-floor1: #4a3a40;
+  --art-dun-floor2: #2a1d22;
+}
+:root {
+  --art-tav-bg: #2a1d22;
+  --art-tav-bar: rgba(58,34,38,0.92);
+  --art-tav-panel: rgba(48,28,32,0.9);
+  --art-tav-ink: #f6ead8;
+  --art-tav-muted: #d0b8a8;
+  --art-tav-title: #ffd08a;
+  --art-tav-titleGlow: rgba(255,150,60,0.4);
+  --art-tav-accent: #ff9a4d;
+  --art-tav-onAccent: #1a0f0a;
+  --art-tav-frame: rgba(240,190,110,0.55);
+  --art-tav-frameInner: rgba(0,0,0,0.25);
+  --art-tav-wall: #4a3024;
+  --art-tav-floor: #33221a;
+  --art-tav-sky1: #3a1c3a;
+  --art-tav-sky2: #e0763a;
+  --art-tav-orb: #ffd38a;
+  --art-tav-orbOpacity: 0.9;
+  --art-tav-mine: rgba(255,154,77,0.16);
+}
+:root {
+  --art-mkt-bg: #2a1d22;
+  --art-mkt-bar: rgba(58,34,38,0.92);
+  --art-mkt-panel: rgba(48,28,32,0.9);
+  --art-mkt-ink: #f6ead8;
+  --art-mkt-muted: #d0b8a8;
+  --art-mkt-title: #ffd08a;
+  --art-mkt-titleGlow: rgba(255,150,60,0.4);
+  --art-mkt-accent: #ff9a4d;
+  --art-mkt-onAccent: #1a0f0a;
+  --art-mkt-frame: rgba(240,190,110,0.55);
+  --art-mkt-frameInner: rgba(0,0,0,0.25);
+  --art-mkt-sky1: #3a1c3a;
+  --art-mkt-sky2: #e0763a;
+  --art-mkt-stars: 0;
+  --art-mkt-house: #4a2440;
+  --art-mkt-street: #4a3a40;
+}
+:root {
+  --art-hall-bg: #2a1d22;
+  --art-hall-bar: rgba(58,34,38,0.92);
+  --art-hall-panel: rgba(48,28,32,0.92);
+  --art-hall-head: rgba(0,0,0,0.2);
+  --art-hall-ink: #f6ead8;
+  --art-hall-muted: #d0b8a8;
+  --art-hall-title: #ffd08a;
+  --art-hall-titleGlow: rgba(255,150,60,0.4);
+  --art-hall-accent: #ff9a4d;
+  --art-hall-onAccent: #1a0f0a;
+  --art-hall-frame: rgba(240,190,110,0.55);
+  --art-hall-frameInner: rgba(0,0,0,0.25);
+  --art-hall-track: rgba(255,255,255,0.12);
+  --art-hall-wall1: #3a2a34;
+  --art-hall-wall2: #4a3440;
+  --art-hall-floor: #4a3a40;
+  --art-hall-glass1: #ffb46a;
+  --art-hall-glass2: #c2563a;
+  --art-hall-beam: #ffd08a;
+  --art-hall-beams: 0.9;
+  --art-hall-raysOpacity: 0.2;
+  --art-hall-me: rgba(255,154,77,0.18);
+}
+
+/* Nuit */
+:root[data-theme='dark'] {
+  --art-map-bg: #0d0a13;
+  --art-map-bar: rgba(22,16,30,0.92);
+  --art-map-panel: rgba(20,14,28,0.9);
+  --art-map-ink: #ece2d0;
+  --art-map-muted: #a596b3;
+  --art-map-title: #f0c27a;
+  --art-map-titleGlow: rgba(240,120,40,0.45);
+  --art-map-accent: #ff8a3d;
+  --art-map-onAccent: #1a0f0a;
+  --art-map-frame: rgba(212,166,74,0.55);
+  --art-map-frameInner: rgba(0,0,0,0.35);
+  --art-map-track: rgba(255,255,255,0.08);
+  --art-map-sky1: #05040c;
+  --art-map-sky2: #1e1430;
+  --art-map-sky3: #3a2440;
+  --art-map-orb: #cfd8ff;
+  --art-map-orbCore: #c8d0f0;
+  --art-map-orbX: 820;
+  --art-map-stars: 1;
+  --art-map-craters: 0.35;
+  --art-map-cloud: #2e2842;
+  --art-map-cloudLight: #4a4466;
+  --art-map-cloudOpacity: 0.7;
+  --art-map-gust: rgba(200,200,255,0.5);
+  --art-map-bird: #0a0810;
+  --art-map-mtFarTop: #2e2a44;
+  --art-map-mtFar: #1c1828;
+  --art-map-mtMidTop: #231c30;
+  --art-map-mtMid: #17121f;
+  --art-map-hillTop: #1d2620;
+  --art-map-hill: #141b16;
+  --art-map-snow: #c8cce0;
+  --art-map-landTop: #24321f;
+  --art-map-land: #141c14;
+  --art-map-landShade: #0c120c;
+  --art-map-grassLine: #3c5434;
+  --art-map-bank: #3a3226;
+  --art-map-waterTop: #1c3458;
+  --art-map-water: #0c1a30;
+  --art-map-waterHi: #6a9ae0;
+  --art-map-reed: #2c3a22;
+  --art-map-path: #5a4a3a;
+  --art-map-pathEdge: #2e251c;
+  --art-map-pathLight: #8a7458;
+  --art-map-stoneLight: #6e6680;
+  --art-map-stone: #4a4458;
+  --art-map-stoneDark: #26222e;
+  --art-map-pine: #0e1a14;
+  --art-map-pineLight: #22382a;
+  --art-map-leaf: #16281a;
+  --art-map-leafLight: #36543a;
+  --art-map-window: #ffb84d;
+  --art-map-windows: 0.8;
+  --art-map-fog: 0.16;
+  --art-map-vignette: 0.75;
+  --art-map-c1x: 808;
+  --art-map-c2x: 834;
+  --art-map-c3x: 826;
+  --art-map-reflX: 196;
+  --art-map-reflX2: 244;
+  --art-map-reflX3: 290;
+  --art-map-reflX4: 150;
+  --art-map-orbx: 820px;
+}
+:root[data-theme='dark'] {
+  --art-dun-bg: #0d0a13;
+  --art-dun-bar: rgba(22,16,30,0.92);
+  --art-dun-panel: rgba(20,14,28,0.9);
+  --art-dun-ink: #ece2d0;
+  --art-dun-muted: #a596b3;
+  --art-dun-title: #f0c27a;
+  --art-dun-titleGlow: rgba(240,120,40,0.45);
+  --art-dun-accent: #ff8a3d;
+  --art-dun-onAccent: #1a0f0a;
+  --art-dun-frame: rgba(212,166,74,0.55);
+  --art-dun-frameInner: rgba(0,0,0,0.35);
+  --art-dun-wall1: #1b1524;
+  --art-dun-wall2: #2a2136;
+  --art-dun-floor1: #2a2232;
+  --art-dun-floor2: #120d18;
+}
+:root[data-theme='dark'] {
+  --art-tav-bg: #0d0a13;
+  --art-tav-bar: rgba(22,16,30,0.92);
+  --art-tav-panel: rgba(20,14,28,0.9);
+  --art-tav-ink: #ece2d0;
+  --art-tav-muted: #a596b3;
+  --art-tav-title: #f0c27a;
+  --art-tav-titleGlow: rgba(240,120,40,0.45);
+  --art-tav-accent: #ff8a3d;
+  --art-tav-onAccent: #1a0f0a;
+  --art-tav-frame: rgba(212,166,74,0.55);
+  --art-tav-frameInner: rgba(0,0,0,0.35);
+  --art-tav-wall: #2a1c16;
+  --art-tav-floor: #1e130e;
+  --art-tav-sky1: #07060f;
+  --art-tav-sky2: #1c2450;
+  --art-tav-orb: #e9edff;
+  --art-tav-orbOpacity: 1;
+  --art-tav-mine: rgba(255,138,61,0.14);
+}
+:root[data-theme='dark'] {
+  --art-mkt-bg: #0d0a13;
+  --art-mkt-bar: rgba(22,16,30,0.92);
+  --art-mkt-panel: rgba(20,14,28,0.9);
+  --art-mkt-ink: #ece2d0;
+  --art-mkt-muted: #a596b3;
+  --art-mkt-title: #f0c27a;
+  --art-mkt-titleGlow: rgba(240,120,40,0.45);
+  --art-mkt-accent: #ff8a3d;
+  --art-mkt-onAccent: #1a0f0a;
+  --art-mkt-frame: rgba(212,166,74,0.55);
+  --art-mkt-frameInner: rgba(0,0,0,0.35);
+  --art-mkt-sky1: #07060f;
+  --art-mkt-sky2: #2a1838;
+  --art-mkt-stars: 1;
+  --art-mkt-house: #1a1426;
+  --art-mkt-street: #241c2c;
+}
+:root[data-theme='dark'] {
+  --art-hall-bg: #0d0a13;
+  --art-hall-bar: rgba(22,16,30,0.92);
+  --art-hall-panel: rgba(20,14,28,0.92);
+  --art-hall-head: rgba(0,0,0,0.25);
+  --art-hall-ink: #ece2d0;
+  --art-hall-muted: #a596b3;
+  --art-hall-title: #f0c27a;
+  --art-hall-titleGlow: rgba(240,120,40,0.45);
+  --art-hall-accent: #ff8a3d;
+  --art-hall-onAccent: #1a0f0a;
+  --art-hall-frame: rgba(212,166,74,0.55);
+  --art-hall-frameInner: rgba(0,0,0,0.35);
+  --art-hall-track: rgba(255,255,255,0.08);
+  --art-hall-wall1: #1b1524;
+  --art-hall-wall2: #2a2136;
+  --art-hall-floor: #2a2232;
+  --art-hall-glass1: #1a2a5a;
+  --art-hall-glass2: #0e1430;
+  --art-hall-beam: #8aa8ff;
+  --art-hall-beams: 0.6;
+  --art-hall-raysOpacity: 0.12;
+  --art-hall-me: rgba(255,138,61,0.16);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --art-map-bg: #0d0a13;
+    --art-map-bar: rgba(22,16,30,0.92);
+    --art-map-panel: rgba(20,14,28,0.9);
+    --art-map-ink: #ece2d0;
+    --art-map-muted: #a596b3;
+    --art-map-title: #f0c27a;
+    --art-map-titleGlow: rgba(240,120,40,0.45);
+    --art-map-accent: #ff8a3d;
+    --art-map-onAccent: #1a0f0a;
+    --art-map-frame: rgba(212,166,74,0.55);
+    --art-map-frameInner: rgba(0,0,0,0.35);
+    --art-map-track: rgba(255,255,255,0.08);
+    --art-map-sky1: #05040c;
+    --art-map-sky2: #1e1430;
+    --art-map-sky3: #3a2440;
+    --art-map-orb: #cfd8ff;
+    --art-map-orbCore: #c8d0f0;
+    --art-map-orbX: 820;
+    --art-map-stars: 1;
+    --art-map-craters: 0.35;
+    --art-map-cloud: #2e2842;
+    --art-map-cloudLight: #4a4466;
+    --art-map-cloudOpacity: 0.7;
+    --art-map-gust: rgba(200,200,255,0.5);
+    --art-map-bird: #0a0810;
+    --art-map-mtFarTop: #2e2a44;
+    --art-map-mtFar: #1c1828;
+    --art-map-mtMidTop: #231c30;
+    --art-map-mtMid: #17121f;
+    --art-map-hillTop: #1d2620;
+    --art-map-hill: #141b16;
+    --art-map-snow: #c8cce0;
+    --art-map-landTop: #24321f;
+    --art-map-land: #141c14;
+    --art-map-landShade: #0c120c;
+    --art-map-grassLine: #3c5434;
+    --art-map-bank: #3a3226;
+    --art-map-waterTop: #1c3458;
+    --art-map-water: #0c1a30;
+    --art-map-waterHi: #6a9ae0;
+    --art-map-reed: #2c3a22;
+    --art-map-path: #5a4a3a;
+    --art-map-pathEdge: #2e251c;
+    --art-map-pathLight: #8a7458;
+    --art-map-stoneLight: #6e6680;
+    --art-map-stone: #4a4458;
+    --art-map-stoneDark: #26222e;
+    --art-map-pine: #0e1a14;
+    --art-map-pineLight: #22382a;
+    --art-map-leaf: #16281a;
+    --art-map-leafLight: #36543a;
+    --art-map-window: #ffb84d;
+    --art-map-windows: 0.8;
+    --art-map-fog: 0.16;
+    --art-map-vignette: 0.75;
+    --art-map-c1x: 808;
+    --art-map-c2x: 834;
+    --art-map-c3x: 826;
+    --art-map-reflX: 196;
+    --art-map-reflX2: 244;
+    --art-map-reflX3: 290;
+    --art-map-reflX4: 150;
+    --art-map-orbx: 820px;
+  }
+  :root:not([data-theme='light']) {
+    --art-dun-bg: #0d0a13;
+    --art-dun-bar: rgba(22,16,30,0.92);
+    --art-dun-panel: rgba(20,14,28,0.9);
+    --art-dun-ink: #ece2d0;
+    --art-dun-muted: #a596b3;
+    --art-dun-title: #f0c27a;
+    --art-dun-titleGlow: rgba(240,120,40,0.45);
+    --art-dun-accent: #ff8a3d;
+    --art-dun-onAccent: #1a0f0a;
+    --art-dun-frame: rgba(212,166,74,0.55);
+    --art-dun-frameInner: rgba(0,0,0,0.35);
+    --art-dun-wall1: #1b1524;
+    --art-dun-wall2: #2a2136;
+    --art-dun-floor1: #2a2232;
+    --art-dun-floor2: #120d18;
+  }
+  :root:not([data-theme='light']) {
+    --art-tav-bg: #0d0a13;
+    --art-tav-bar: rgba(22,16,30,0.92);
+    --art-tav-panel: rgba(20,14,28,0.9);
+    --art-tav-ink: #ece2d0;
+    --art-tav-muted: #a596b3;
+    --art-tav-title: #f0c27a;
+    --art-tav-titleGlow: rgba(240,120,40,0.45);
+    --art-tav-accent: #ff8a3d;
+    --art-tav-onAccent: #1a0f0a;
+    --art-tav-frame: rgba(212,166,74,0.55);
+    --art-tav-frameInner: rgba(0,0,0,0.35);
+    --art-tav-wall: #2a1c16;
+    --art-tav-floor: #1e130e;
+    --art-tav-sky1: #07060f;
+    --art-tav-sky2: #1c2450;
+    --art-tav-orb: #e9edff;
+    --art-tav-orbOpacity: 1;
+    --art-tav-mine: rgba(255,138,61,0.14);
+  }
+  :root:not([data-theme='light']) {
+    --art-mkt-bg: #0d0a13;
+    --art-mkt-bar: rgba(22,16,30,0.92);
+    --art-mkt-panel: rgba(20,14,28,0.9);
+    --art-mkt-ink: #ece2d0;
+    --art-mkt-muted: #a596b3;
+    --art-mkt-title: #f0c27a;
+    --art-mkt-titleGlow: rgba(240,120,40,0.45);
+    --art-mkt-accent: #ff8a3d;
+    --art-mkt-onAccent: #1a0f0a;
+    --art-mkt-frame: rgba(212,166,74,0.55);
+    --art-mkt-frameInner: rgba(0,0,0,0.35);
+    --art-mkt-sky1: #07060f;
+    --art-mkt-sky2: #2a1838;
+    --art-mkt-stars: 1;
+    --art-mkt-house: #1a1426;
+    --art-mkt-street: #241c2c;
+  }
+  :root:not([data-theme='light']) {
+    --art-hall-bg: #0d0a13;
+    --art-hall-bar: rgba(22,16,30,0.92);
+    --art-hall-panel: rgba(20,14,28,0.92);
+    --art-hall-head: rgba(0,0,0,0.25);
+    --art-hall-ink: #ece2d0;
+    --art-hall-muted: #a596b3;
+    --art-hall-title: #f0c27a;
+    --art-hall-titleGlow: rgba(240,120,40,0.45);
+    --art-hall-accent: #ff8a3d;
+    --art-hall-onAccent: #1a0f0a;
+    --art-hall-frame: rgba(212,166,74,0.55);
+    --art-hall-frameInner: rgba(0,0,0,0.35);
+    --art-hall-track: rgba(255,255,255,0.08);
+    --art-hall-wall1: #1b1524;
+    --art-hall-wall2: #2a2136;
+    --art-hall-floor: #2a2232;
+    --art-hall-glass1: #1a2a5a;
+    --art-hall-glass2: #0e1430;
+    --art-hall-beam: #8aa8ff;
+    --art-hall-beams: 0.6;
+    --art-hall-raysOpacity: 0.12;
+    --art-hall-me: rgba(255,138,61,0.16);
+  }
+}
+
+/* Décor : Main */
+@keyframes map-ember{0%{transform:translateY(0) translateX(0);opacity:0}15%{opacity:1}100%{transform:translateY(-260px) translateX(30px);opacity:0}}
+@keyframes map-drift{0%,100%{transform:translateX(-40px)}50%{transform:translateX(40px)}}
+@keyframes map-flicker{0%,100%{opacity:1}40%{opacity:0.75}60%{opacity:0.95}80%{opacity:0.7}}
+@keyframes map-pulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,122,47,0.55)}50%{transform:scale(1.06);box-shadow:0 0 0 10px rgba(255,122,47,0)}}
+@keyframes map-shimmer{to{stroke-dashoffset:-60}}
+@keyframes map-rune{0%,100%{opacity:0.5}50%{opacity:1}}
+@keyframes map-walk{0%{transform:translateX(0) scaleX(1)}49%{transform:translateX(160px) scaleX(1)}50%{transform:translateX(160px) scaleX(-1)}99%{transform:translateX(0) scaleX(-1)}100%{transform:translateX(0) scaleX(1)}}
+@keyframes map-sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+@keyframes map-twinkle{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes map-flap{0%,100%{transform:translate(0,0)}50%{transform:translate(18px,-10px)}}
+@keyframes map-graze{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}
+@keyframes map-smoke{0%{transform:translateY(0) scale(0.8);opacity:0.6}100%{transform:translateY(-40px) scale(1.6);opacity:0}}
+@keyframes map-bob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(4px) rotate(1deg)}}
+@keyframes map-firefly{0%,100%{transform:translate(0,0);opacity:0.2}50%{transform:translate(14px,-12px);opacity:1}}
+@keyframes map-cloud{from{transform:translateX(-520px)}to{transform:translateX(1900px)}}
+@keyframes map-gust{0%{stroke-dashoffset:420;opacity:0}15%{opacity:0.55}60%{opacity:0.4}100%{stroke-dashoffset:-420;opacity:0}}
+@keyframes map-leaf{0%{transform:translate(0,0) rotate(0);opacity:0}10%{opacity:1}100%{transform:translate(1500px,-60px) rotate(900deg);opacity:0}}
+@keyframes map-fly{from{transform:translate(-200px,0)}to{transform:translate(1900px,-80px)}}
+@keyframes map-wing{0%,100%{transform:scaleY(1)}50%{transform:scaleY(-0.6)}}
+@keyframes map-shoot{0%,88%{transform:translate(0,0);opacity:0}90%{opacity:1}100%{transform:translate(-420px,180px);opacity:0}}
+@keyframes map-jump{0%,80%,100%{transform:translate(0,0) rotate(0);opacity:0}82%{opacity:1}88%{transform:translate(22px,-46px) rotate(-40deg);opacity:1}94%{transform:translate(44px,0) rotate(-120deg);opacity:1}95%{opacity:0}}
+@keyframes map-ripple{0%{transform:scale(0.2);opacity:0.8}100%{transform:scale(1.6);opacity:0}}
+@keyframes map-windsway{0%,100%{transform:rotate(-1.5deg) skewX(0)}40%{transform:rotate(3deg) skewX(-3deg)}70%{transform:rotate(0.5deg) skewX(-1deg)}}
+@keyframes map-grass{0%,100%{transform:skewX(0)}45%{transform:skewX(-14deg)}}
+@keyframes map-flagwave{0%,100%{transform:skewY(0) scaleX(1)}25%{transform:skewY(-6deg) scaleX(0.94)}50%{transform:skewY(3deg) scaleX(1.02)}75%{transform:skewY(-3deg) scaleX(0.97)}}
+@keyframes map-smokewind{0%{transform:translate(0,0) scale(0.7);opacity:0.6}100%{transform:translate(50px,-46px) scale(1.8);opacity:0}}
+@keyframes map-blades{to{transform:rotate(360deg)}}
+@keyframes map-ringA{0%{transform:translate(-50%,-50%) scale(0.2);opacity:1}100%{transform:translate(-50%,-50%) scale(2.4);opacity:0}}
+@keyframes map-ringB{0%{transform:translate(-50%,-50%) scale(0.2);opacity:1}100%{transform:translate(-50%,-50%) scale(2.4);opacity:0}}
+@keyframes map-sparkA{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(0.3);opacity:0}}
+@keyframes map-sparkB{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(0.3);opacity:0}}
+@keyframes map-popA{0%,100%{transform:scale(1)}30%{transform:scale(1.08,0.92)}60%{transform:scale(0.96,1.06)}}
+@keyframes map-popB{0%,100%{transform:scale(1)}30%{transform:scale(1.08,0.92)}60%{transform:scale(0.96,1.06)}}
+@keyframes map-floatA{0%{transform:translate(-50%,0);opacity:0}15%{opacity:1}100%{transform:translate(-50%,-70px);opacity:0}}
+@keyframes map-floatB{0%{transform:translate(-50%,0);opacity:0}15%{opacity:1}100%{transform:translate(-50%,-70px);opacity:0}}
+@keyframes map-hop{0%,100%{transform:translateY(0)}40%{transform:translateY(-26px)}}
+@keyframes map-meow{0%{transform:translate(-50%,0) scale(0.6);opacity:0}20%{transform:translate(-50%,-10px) scale(1.1);opacity:1}100%{transform:translate(-50%,-40px);opacity:0}}
+.art-map .cloud{animation:map-cloud linear infinite}
+.art-map .gust path{stroke-dasharray:140 700;animation:map-gust 7s ease-in-out infinite}
+.art-map .leaf{animation:map-leaf 9s linear infinite}
+.art-map .flock{animation:map-fly 38s linear infinite}
+.art-map .wing{transform-box:fill-box;transform-origin:50% 50%;animation:map-wing 0.5s ease-in-out infinite}
+.art-map .shoot{animation:map-shoot 11s ease-in infinite}
+.art-map .jump{transform-box:fill-box;transform-origin:center;animation:map-jump 6s ease-in-out infinite}
+.art-map .ripple{transform-box:fill-box;transform-origin:center;animation:map-ripple 3s ease-out infinite}
+.art-map .wind{transform-box:fill-box;transform-origin:50% 100%;animation:map-windsway 5s ease-in-out infinite}
+.art-map .grass{transform-box:fill-box;transform-origin:50% 100%;animation:map-grass 3.2s ease-in-out infinite}
+.art-map .flagwave{transform-box:fill-box;transform-origin:0% 50%;animation:map-flagwave 1.6s ease-in-out infinite}
+.art-map .smokewind circle{transform-box:fill-box;transform-origin:center;animation:map-smokewind 3.4s ease-out infinite}
+.art-map .blades{transform-box:fill-box;transform-origin:center;animation:map-blades 9s linear infinite}
+.art-map .pop0, .art-map .pop1{transform-box:fill-box;transform-origin:50% 100%}
+.art-map .pop0{animation:map-popA 0.6s ease-out}
+.art-map .pop1{animation:map-popB 0.6s ease-out}
+.art-map .twinkle{animation:map-twinkle 3s ease-in-out infinite}
+.art-map .bats{animation:map-flap 4s ease-in-out infinite}
+.art-map .graze{animation:map-graze 6s ease-in-out infinite}
+.art-map .smoke circle{transform-box:fill-box;transform-origin:center;animation:map-smoke 3s ease-out infinite}
+.art-map .bob{transform-box:fill-box;transform-origin:50% 100%;animation:map-bob 4s ease-in-out infinite}
+.art-map .firefly{animation:map-firefly 5s ease-in-out infinite}
+.art-map .ember{animation:map-ember 6s linear infinite}
+.art-map .fog{animation:map-drift 18s ease-in-out infinite}
+.art-map .flicker{animation:map-flicker 1.6s ease-in-out infinite}
+.art-map .rune{animation:map-rune 2.6s ease-in-out infinite}
+.art-map .water{animation:map-shimmer 3s linear infinite}
+.art-map .walker{animation:map-walk 16s linear infinite}
+.art-map .sway{transform-box:fill-box;transform-origin:50% 100%;animation:map-sway 3s ease-in-out infinite}
+
+/* Décor : Donjon */
+@keyframes dun-flicker{0%,100%{opacity:1}40%{opacity:0.7}60%{opacity:0.95}80%{opacity:0.65}}
+@keyframes dun-ember{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-300px) translateX(-20px);opacity:0}}
+@keyframes dun-hover{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes dun-hose{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}
+@keyframes dun-aura{0%,100%{opacity:0.45;transform:scale(1)}50%{opacity:0.9;transform:scale(1.08)}}
+@keyframes dun-ratbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes dun-hit{0%,100%{transform:translateX(0);filter:none}20%{transform:translateX(12px);filter:brightness(2.4) saturate(0)}45%{transform:translateX(-8px)}70%{transform:translateX(4px)}}
+@keyframes dun-slash{0%{stroke-dashoffset:260;opacity:1}70%{opacity:1}100%{stroke-dashoffset:0;opacity:0}}
+@keyframes dun-dmg{0%{transform:translateY(0) scale(0.6);opacity:0}20%{transform:translateY(-10px) scale(1.25);opacity:1}100%{transform:translateY(-70px) scale(1);opacity:0}}
+@keyframes dun-shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-6px,3px)}40%{transform:translate(5px,-4px)}60%{transform:translate(-4px,2px)}80%{transform:translate(3px,-2px)}}
+@keyframes dun-wave{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes dun-ring{0%,100%{box-shadow:0 0 0 0 rgba(255,77,94,0.6)}50%{box-shadow:0 0 0 8px rgba(255,77,94,0)}}
+@keyframes dun-banner{0%{transform:translate(-50%,-50%) scale(0.6);opacity:0}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+@keyframes dun-spk{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(0.2);opacity:0}}
+@keyframes dun-shieldA{0%{transform:scale(0.6);opacity:0}25%{transform:scale(1.05);opacity:1}80%{opacity:0.8}100%{transform:scale(1.1);opacity:0}}
+@keyframes dun-shieldB{0%{transform:scale(0.6);opacity:0}25%{transform:scale(1.05);opacity:1}80%{opacity:0.8}100%{transform:scale(1.1);opacity:0}}
+@keyframes dun-heartA{0%{transform:translateY(0) scale(0.5);opacity:0}20%{opacity:1}100%{transform:translateY(-120px) scale(1.1);opacity:0}}
+@keyframes dun-heartB{0%{transform:translateY(0) scale(0.5);opacity:0}20%{opacity:1}100%{transform:translateY(-120px) scale(1.1);opacity:0}}
+@keyframes dun-hurtA{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
+@keyframes dun-hurtB{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
+@keyframes dun-drip{0%,70%{transform:translateY(0);opacity:0}72%{opacity:0.9}100%{transform:translateY(300px);opacity:0}}
+@keyframes dun-mote{0%{transform:translate(0,0);opacity:0}30%{opacity:0.8}100%{transform:translate(40px,-90px);opacity:0}}
+@keyframes dun-tail{0%,100%{transform:rotate(0)}50%{transform:rotate(-8deg)}}
+@keyframes dun-coin{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(540deg);opacity:0}}
+@keyframes dun-suck{0%{transform:translate(0,0) scale(1);opacity:0}20%{opacity:0.9}100%{transform:translate(var(--sx),var(--sy)) scale(0.2);opacity:0}}
+.art-dun .flicker{animation:dun-flicker 1.4s ease-in-out infinite}
+.art-dun .ember{animation:dun-ember 5s linear infinite}
+.art-dun .drip{animation:dun-drip 5s ease-in infinite}
+.art-dun .mote{animation:dun-mote 6s ease-out infinite}
+.art-dun .rtail{transform-box:fill-box;transform-origin:100% 100%;animation:dun-tail 1.6s ease-in-out infinite}
+.art-dun .suck{transform-box:fill-box;animation:dun-suck 2.2s ease-in infinite}
+.art-dun .boss{animation:dun-hover 3.2s ease-in-out infinite}
+.art-dun .hose{transform-box:fill-box;transform-origin:0% 50%;animation:dun-hose 2.4s ease-in-out infinite}
+.art-dun .aura{transform-box:fill-box;transform-origin:center;animation:dun-aura 2.2s ease-in-out infinite}
+.art-dun .rat{animation:dun-ratbob 1.4s ease-in-out infinite}
+
+/* Décor : Taverne */
+@keyframes tav-fire{0%,100%{transform:scaleY(1) translateY(0)}30%{transform:scaleY(1.12) translateY(-3px)}60%{transform:scaleY(0.94) translateY(1px)}}
+@keyframes tav-flicker{0%,100%{opacity:1}40%{opacity:0.7}60%{opacity:0.95}80%{opacity:0.65}}
+@keyframes tav-ember{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-160px) translateX(16px);opacity:0}}
+@keyframes tav-steam{0%{transform:translateY(0) scale(0.8);opacity:0}30%{opacity:0.5}100%{transform:translateY(-40px) scale(1.4);opacity:0}}
+@keyframes tav-bubble{0%{transform:translateY(8px) scale(0.9);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+@keyframes tav-hopA{0%,100%{transform:translateY(0)}35%{transform:translateY(-18px) rotate(-3deg)}65%{transform:translateY(0) scaleY(0.94)}}
+@keyframes tav-hopB{0%,100%{transform:translateY(0)}35%{transform:translateY(-18px) rotate(3deg)}65%{transform:translateY(0) scaleY(0.94)}}
+@keyframes tav-heartup{0%{transform:translate(0,0) scale(0.4);opacity:0}20%{opacity:1}100%{transform:translate(var(--dx),-90px) scale(1.1);opacity:0}}
+@keyframes tav-spit{0%{transform:translate(0,0);opacity:1}100%{transform:translate(var(--dx),-110px);opacity:0}}
+@keyframes tav-glint{0%,100%{opacity:0}50%{opacity:0.9}}
+.art-tav .fire{transform-box:fill-box;transform-origin:50% 100%;animation:tav-fire 0.9s ease-in-out infinite}
+.art-tav .flicker{animation:tav-flicker 1.4s ease-in-out infinite}
+.art-tav .ember{animation:tav-ember 4s linear infinite}
+.art-tav .steam{animation:tav-steam 2.6s ease-out infinite}
+.art-tav .bubble{animation:tav-bubble 0.3s ease-out}
+.art-tav .crackle{animation:tav-spit 1.4s ease-out infinite}
+.art-tav .glint{animation:tav-glint 3s ease-in-out infinite}
+
+/* Décor : Marche */
+@keyframes mkt-flicker{0%,100%{opacity:1}40%{opacity:0.7}60%{opacity:0.95}80%{opacity:0.65}}
+@keyframes mkt-swing{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes mkt-coin{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-90px);opacity:0}}
+@keyframes mkt-twinkle{0%,100%{opacity:0.3}50%{opacity:1}}
+@keyframes mkt-smoke{0%{transform:translateY(0) scale(0.8);opacity:0.5}100%{transform:translateY(-30px) scale(1.6);opacity:0}}
+@keyframes mkt-lantern{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
+@keyframes mkt-coinfly{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(600deg);opacity:0}}
+@keyframes mkt-leaf{0%{transform:translate(0,0) rotate(0);opacity:0}10%{opacity:1}100%{transform:translate(1500px,-40px) rotate(900deg);opacity:0}}
+@keyframes mkt-cross{0%{transform:translateX(-120px) scaleX(1)}49%{transform:translateX(1700px) scaleX(1)}50%{transform:translateX(1700px) scaleX(-1)}100%{transform:translateX(-120px) scaleX(-1)}}
+@keyframes mkt-paw{0%,100%{opacity:0}30%,70%{opacity:0.5}}
+.art-mkt .flicker{animation:mkt-flicker 1.5s ease-in-out infinite}
+.art-mkt .swing{transform-box:fill-box;transform-origin:50% 0%;animation:mkt-swing 3s ease-in-out infinite}
+.art-mkt .twinkle{animation:mkt-twinkle 3s ease-in-out infinite}
+.art-mkt .smoke circle{transform-box:fill-box;transform-origin:center;animation:mkt-smoke 3s ease-out infinite}
+.art-mkt .lantern{transform-box:view-box;animation:mkt-lantern 2.8s ease-in-out infinite}
+.art-mkt .mleaf{animation:mkt-leaf 10s linear infinite}
+.art-mkt .stray{animation:mkt-cross 40s linear infinite}
+
+/* Décor : Classement */
+@keyframes hall-flicker{0%,100%{opacity:1}40%{opacity:0.72}60%{opacity:0.95}80%{opacity:0.68}}
+@keyframes hall-confetti{0%{transform:translateY(-30px) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(380px) rotate(540deg);opacity:0}}
+@keyframes hall-shine{0%,70%,100%{opacity:0}80%{opacity:0.9}}
+@keyframes hall-ray{to{transform:rotate(360deg)}}
+@keyframes hall-rowflashA{0%{background:rgba(255,178,90,0.55)}100%{background:transparent}}
+@keyframes hall-rowflashB{0%{background:rgba(255,178,90,0.55)}100%{background:transparent}}
+@keyframes hall-up{0%{transform:translateY(6px);opacity:0}30%{transform:translateY(0);opacity:1}100%{opacity:0}}
+@keyframes hall-livedot{0%,100%{box-shadow:0 0 0 0 rgba(124,240,143,0.7)}50%{box-shadow:0 0 0 7px rgba(124,240,143,0)}}
+@keyframes hall-burst{0%{transform:translate(0,0) scale(0.4);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1);opacity:0}}
+@keyframes hall-purr{0%{transform:translate(-50%,0) scale(0.6);opacity:0}20%{transform:translate(-50%,-14px) scale(1.1);opacity:1}100%{transform:translate(-50%,-56px) scale(1);opacity:0}}
+@keyframes hall-dust{0%{transform:translate(0,0);opacity:0}20%{opacity:0.8}100%{transform:translate(60px,120px);opacity:0}}
+@keyframes hall-sway{0%,100%{transform:skewX(0)}50%{transform:skewX(-3deg)}}
+.art-hall .flicker{animation:hall-flicker 1.5s ease-in-out infinite}
+.art-hall .confetti{animation:hall-confetti 5s linear infinite}
+.art-hall .shine{animation:hall-shine 4s ease-in-out infinite}
+.art-hall .rays{transform-box:fill-box;transform-origin:center;animation:hall-ray 40s linear infinite}
+.art-hall .dust{animation:hall-dust 7s linear infinite}
+
+@media (prefers-reduced-motion: reduce) {
+  [class^='art-'] *, [class*=' art-'] * { animation: none !important; }
+}
+
+/* ------------------------------------------------------------------------------------------
+ * Mise en scène commune (src/ui/art/scene.tsx) : décor, éléments posés, panneau superposé.
+ * ---------------------------------------------------------------------------------------- */
+.scene-wrap { position: relative; margin-top: 14px; }
+.scene {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--frame);
+  box-shadow: inset 0 0 0 3px rgb(0 0 0 / 0.3), 0 10px 40px rgb(0 0 0 / 0.45);
+}
+.art-svg { display: block; width: 100%; height: auto; }
+.scene-layer { position: absolute; inset: 0; pointer-events: none; }
+.scene-layer > * { pointer-events: auto; }
+.scene-layer > .fx, .scene-layer > .fx-float, .scene-layer > .fx-delay, .scene-layer > .fx-shield { pointer-events: none; }
+.scene-overlay {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: min(360px, 38%);
+  max-height: calc(100% - 32px);
+  overflow-y: auto;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+.scene-overlay .panel { margin-top: 0; backdrop-filter: blur(6px); }
+@media (max-width: 860px) {
+  .scene-overlay { position: static; width: auto; max-height: none; margin-top: 12px; }
+}
+
+/* Chat dessiné (src/ui/art/cat-avatar.tsx). */
+.cat { display: inline-block; }
+.cat svg { display: block; overflow: visible; }
+@keyframes k-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+@keyframes k-tail { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(8deg); } }
+@keyframes k-blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.08); } }
+@keyframes k-ear { 0%, 86%, 100% { transform: rotate(0); } 90% { transform: rotate(-10deg); } }
+@keyframes k-cape { 0%, 100% { transform: skewX(0deg); } 50% { transform: skewX(-4deg); } }
+@keyframes k-glow { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.95; } }
+@keyframes k-attack { 0% { transform: translateX(0) rotate(0); } 30% { transform: translateX(26px) rotate(6deg); } 55% { transform: translateX(34px) rotate(-4deg); } 100% { transform: translateX(0) rotate(0); } }
+@keyframes k-hit { 0%, 100% { transform: translateX(0); filter: none; } 20% { transform: translateX(-8px); filter: brightness(2) saturate(0); } 45% { transform: translateX(6px); } 70% { transform: translateX(-3px); } }
+@keyframes k-blade { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-55deg); } 55% { transform: rotate(40deg); } }
+.k-body { animation: k-bob 2.4s ease-in-out infinite; }
+.k-tail { transform-box: fill-box; transform-origin: 0% 100%; animation: k-tail 2.8s ease-in-out infinite; }
+.k-eye { transform-box: fill-box; transform-origin: center; animation: k-blink 5.5s infinite; }
+.k-ear-l { transform-box: fill-box; transform-origin: 50% 100%; animation: k-ear 7s infinite; }
+.k-cape { transform-box: fill-box; transform-origin: 50% 0%; animation: k-cape 3.2s ease-in-out infinite; }
+.k-glow { animation: k-glow 2.4s ease-in-out infinite; }
+.k-attack { animation: k-attack 0.6s ease-out; }
+.k-attack .k-blade { transform-box: fill-box; transform-origin: 50% 95%; animation: k-blade 0.6s ease-out; }
+.k-hit { animation: k-hit 0.5s ease-out; }
+
+/* Repères cliquables de la carte. */
+@keyframes pin-pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgb(255 122 47 / 0.55); } 50% { transform: scale(1.06); box-shadow: 0 0 0 10px rgb(255 122 47 / 0); } }
+.pin {
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 2px solid rgb(212 166 74 / 0.6);
+  background: rgb(14 10 20 / 0.82);
+  color: #f3e7d3;
+  font-family: var(--title-font);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: pin-pulse 2.4s ease-in-out infinite;
+}
+.pin[aria-pressed='true'] { border-color: #ffb27a; }
+.pin:hover, .pin:focus-visible { outline: 2px solid #ffd27a; outline-offset: 3px; }
+
+/* Chats qui se promènent sur la carte, et que l'on peut caresser. */
+.walkcat { position: relative; display: block; padding: 0; background: none; }
+.walkcat:focus-visible, .seat:focus-visible, .stall:focus-visible { outline: 2px solid #ffd27a; outline-offset: 3px; border-radius: 12px; }
+@keyframes hop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-22px) rotate(-3deg); } 70% { transform: translateY(0) scaleY(0.94); } }
+.hop { display: block; transform-origin: 50% 100%; animation: hop 0.55s ease-out; }
+@keyframes meow { 0% { transform: translate(-50%, 0) scale(0.6); opacity: 0; } 20% { transform: translate(-50%, -10px) scale(1.1); opacity: 1; } 100% { transform: translate(-50%, -40px); opacity: 0; } }
+.meow, .purr {
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  white-space: nowrap;
+  pointer-events: none;
+  font-family: var(--title-font);
+  font-weight: 700;
+  color: #fff3d6;
+  text-shadow: 0 2px 3px #000;
+  animation: meow 1.2s ease-out forwards;
+}
+
+/* Combattants et étals posés sur un décor. */
+.fighter-art, .monster-art, .seat, .stall, .walkcat {
+  padding: 0;
+  border: 0;
+  min-height: 0;
+  background: none;
+  text-align: center;
+  color: #f3e7d3;
+}
+/* Ces boutons sont des personnages : ni cadre, ni halo de bouton au survol. */
+.monster-art:not(:disabled):hover, .seat:not(:disabled):hover, .stall:not(:disabled):hover, .walkcat:not(:disabled):hover { box-shadow: none; }
+.seat:not(:disabled):hover, .walkcat:not(:disabled):hover { filter: drop-shadow(0 0 8px rgb(255 210 122 / 0.7)); }
+.scene-overlay .actions button { min-height: 34px; padding: 6px 10px; font-size: 0.9rem; }
+.monster-art:disabled { cursor: default; opacity: 1; }
+.monster-art:not(:disabled):hover { filter: drop-shadow(0 0 10px #ff4d5e); }
+.fighter-art[data-down='true'], .monster-art[data-down='true'] { opacity: 0.35; filter: grayscale(1); }
+.monster-art[data-hit] { animation: k-hit 0.5s ease-out 0.25s; }
+.hp { display: block; height: 7px; margin: 0 12% 6px; border-radius: 99px; background: rgb(0 0 0 / 0.6); overflow: hidden; }
+.hp > span { display: block; height: 100%; background: linear-gradient(90deg, #c2263b, #ff5a5a); transition: width 0.4s; }
+.tag {
+  display: block;
+  margin-top: -4px;
+  font-family: var(--title-font);
+  font-size: 13px;
+  font-weight: 700;
+  color: #f3e7d3;
+  text-shadow: 0 1px 3px #000;
+  white-space: nowrap;
+}
+.tag[data-mine] { color: #ffd08a; }
+.sleeping { opacity: 0.55; filter: saturate(0.6); pointer-events: none; }
+.art-bones svg { filter: grayscale(1) brightness(1.7) sepia(0.25); }
+.stall { position: absolute; }
+.stall-seller { position: absolute; left: 33%; top: 22%; width: 34%; z-index: 0; }
+.stall-seller .cat { width: 100% !important; height: auto !important; }
+.art-stall-svg { position: relative; z-index: 1; display: block; }
+.stall-price { position: absolute; left: 0; right: 0; top: 77%; z-index: 2; font-family: var(--title-font); font-size: 13px; font-weight: 700; color: #1a0f0a; }
+.stall-price .entity { gap: 2px; }
+.stall[aria-pressed='true'] { filter: drop-shadow(0 0 14px rgb(255 160 80 / 0.8)); }
+.bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  width: 220px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #f6ead8;
+  color: #1a0f0a;
+  font-size: 15px;
+  text-align: left;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.5);
+}
+.tavern-panels { display: grid; gap: 12px; }
+
+/* Effets joués une fois (src/ui/art/effects.tsx). */
+.fx { position: absolute; width: 0; height: 0; pointer-events: none; z-index: 5; }
+@keyframes fx-ring { 0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; } }
+.fx-ring { position: absolute; width: 90px; height: 90px; border-radius: 50%; border: 3px solid #ffd27a; box-shadow: 0 0 18px #ff9a3d; animation: fx-ring 0.7s ease-out forwards; }
+@keyframes fx-spark { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) scale(0.3); opacity: 0; } }
+.fx-spark { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #ffe08a; box-shadow: 0 0 8px #ffb84d; animation: fx-spark 0.8s ease-out forwards; }
+@keyframes fx-float { 0% { transform: translate(-50%, 0) scale(0.7); opacity: 0; } 15% { transform: translate(-50%, -8px) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -70px) scale(1); opacity: 0; } }
+.fx-float { position: absolute; z-index: 6; white-space: nowrap; pointer-events: none; font-family: var(--title-font); font-weight: 700; font-size: 26px; text-shadow: 0 2px 0 #000, 0 0 12px currentColor; animation: fx-float 1.4s ease-out forwards; }
+.fx-gold { color: #ffd27a; font-size: 18px; }
+.fx-damage { color: #ff6b6b; }
+.fx-heal { color: #7cf08f; }
+.fx-delay * { animation-delay: inherit; animation-fill-mode: both; }
+.fx-delay { position: absolute; inset: 0; pointer-events: none; }
+@keyframes fx-heart { 0% { transform: translate(0, 0) scale(0.4); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(var(--dx), -90px) scale(1.1); opacity: 0; } }
+.fx-heart { position: absolute; font-size: 20px; animation: fx-heart 1.2s ease-out forwards; animation-delay: var(--delay); opacity: 0; }
+.fx-hearts-pink .fx-heart { color: #ff8ab0; text-shadow: 0 0 8px #ff4d8a; }
+.fx-hearts-green .fx-heart { color: #7cf08f; text-shadow: 0 0 10px #3aff7a; }
+@keyframes fx-coin { 0% { transform: translate(0, 0) rotate(0); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) rotate(540deg); opacity: 0; } }
+.fx-coin { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff2b0, #d4a64a 60%, #7a5410); box-shadow: 0 0 8px #ffb84d; animation: fx-coin 1.4s ease-out forwards; }
+@keyframes fx-shield { 0% { transform: scale(0.6); opacity: 0; } 25% { transform: scale(1.05); opacity: 1; } 80% { opacity: 0.8; } 100% { transform: scale(1.1); opacity: 0; } }
+.fx-shield {
+  border-radius: 50% 50% 12% 12% / 70% 70% 12% 12%;
+  border: 3px solid rgb(255 214 120 / 0.9);
+  background: radial-gradient(circle at 50% 30%, rgb(255 230 160 / 0.35), rgb(212 166 74 / 0.08) 70%);
+  box-shadow: 0 0 30px rgb(255 200 90 / 0.6), inset 0 0 30px rgb(255 220 140 / 0.4);
+  pointer-events: none;
+  animation: fx-shield 1.4s ease-out forwards;
+}
+
+/* Classement : ligne mise à jour, médailles. */
+@keyframes flash { 0% { background: rgb(255 178 90 / 0.5); } 100% { background: transparent; } }
+.ranking tr.flash { animation: flash 1.6s ease-out; }
+.ranking td.rank { font-family: var(--title-font); font-weight: 700; }
+.ranking td.rank[data-rank='1'] { color: #e0b04a; }
+.ranking td.rank[data-rank='2'] { color: #a8a8b8; }
+.ranking td.rank[data-rank='3'] { color: #c07a44; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cat *, .pin, .hop, .meow, .purr, .monster-art, .ranking tr.flash { animation: none !important; }
+  .fx, .fx-float, .fx-shield { display: none; }
+}
+/* Repère d'un bâtiment améliorable : halo vert et flèche dorée qui sautille. */
+@keyframes pin-ready { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.pin[data-ready] { position: relative; border-color: #7cf08f; box-shadow: 0 0 14px rgb(124 240 143 / 0.55); }
+.pin-ready {
+  position: absolute;
+  top: -14px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 12px;
+  color: #1a0f0a;
+  background: radial-gradient(circle at 35% 30%, #fff2b0, #d4a64a 60%, #7a5410);
+  box-shadow: 0 0 10px #ffb84d;
+  animation: pin-ready 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .pin-ready { animation: none; } }

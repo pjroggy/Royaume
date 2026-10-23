@@ -115,6 +115,7 @@ input, select {
 .stock { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .stock div { font-size: 1.3rem; font-variant-numeric: tabular-nums; }
 .stock small { display: block; font-size: 0.8rem; color: var(--muted); }
+.stock .entity > span:last-child { font-size: 0.95rem; color: var(--muted); text-transform: capitalize; }
 .buildings { display: grid; gap: 12px; }
 .building { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 

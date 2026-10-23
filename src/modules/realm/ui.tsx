@@ -210,7 +210,7 @@ export function VillageScreen({ userId }: { userId: string }) {
         <section className="panel stock" aria-label="Ressources">
           {RESOURCES.map((r) => (
             <div key={r}>
-              <Entity kind={r} /> {Math.floor(stock[r])}
+              <Entity kind={r} showLabel /> {Math.floor(stock[r])}
               <small>+{view.ratesPerMinute[r]} / min</small>
             </div>
           ))}
@@ -284,18 +284,32 @@ export function VillageScreen({ userId }: { userId: string }) {
 
         {/* Repères des lieux : les bâtiments ouvrent leur fiche dans le panneau. */}
         {view &&
-          (Object.keys(PLACES) as Place[]).map((place) => (
-            <button
-              key={place}
-              type="button"
-              className="pin"
-              aria-pressed={selected === place}
-              style={at(PLACES[place].left, PLACES[place].top)}
-              onClick={() => select(place)}
-            >
-              {PLACES[place].pin}
-            </button>
-          ))}
+          (Object.keys(PLACES) as Place[]).map((place) => {
+            // Un bâtiment est améliorable si le stock du moment couvre son prochain coût.
+            const ready =
+              isBuilding(place) && stock !== null && canAfford(stock, view.nextCosts[place])
+            return (
+              <button
+                key={place}
+                type="button"
+                className="pin"
+                data-ready={ready || undefined}
+                aria-pressed={selected === place}
+                style={at(PLACES[place].left, PLACES[place].top)}
+                onClick={() => select(place)}
+              >
+                {PLACES[place].pin}
+                {ready && (
+                  <>
+                    <span className="pin-ready" aria-hidden="true">
+                      ▲
+                    </span>
+                    <span className="sr-only"> : amélioration possible</span>
+                  </>
+                )}
+              </button>
+            )
+          })}
       </Scene>
     </>
   )
@@ -374,7 +388,7 @@ function BuildingDetails({
       <div className="line">
         <span>Production</span>
         <strong>
-          +{view.ratesPerMinute[resource]} <Entity kind={resource} /> / min
+          +{view.ratesPerMinute[resource]} <Entity kind={resource} showLabel /> / min
         </strong>
       </div>
       <div className="line">
@@ -383,7 +397,7 @@ function BuildingDetails({
           {cost
             ? Object.entries(cost).map(([r, n]) => (
                 <span key={r}>
-                  {n} <Entity kind={r} />{' '}
+                  {n} <Entity kind={r} showLabel />{' '}
                 </span>
               ))
             : '—'}
