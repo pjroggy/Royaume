@@ -1,42 +1,124 @@
-# Fiche de cadrage : <nom du module>
+# Fiche de cadrage : la Forge
 
-- Auteur :
-- Date :
-- Nom technique du module : `<nom>` (en anglais, comme `realm`, `dungeon` ou `market`)
+- Auteur : Pierre-Jean Roggy
+- Date : 23 octobre 2026
+- Nom technique du module : `forge`
+- Validée par l'enseignant le :
 
 ## L'idée
 
-En quelques phrases : ce que le joueur peut faire, et pourquoi c'est intéressant dans le jeu.
+À la Forge, le joueur fabrique l'équipement de son chat chevalier : casque, armure, arme et
+cape. Chaque recette coûte des ressources de son village (poisson, lait, herbe à chat) et
+demande un temps de fabrication. Une fois l'objet retiré de la forge, le joueur peut y graver
+un nom, puis l'équiper : son chat le porte alors sur tous les écrans du jeu.
+
+La forge est un bâtiment du royaume, visible sur la carte du Village, que le joueur améliore
+comme les autres, de 1 à 5. Plus la forge est haute, meilleure est la qualité des objets qui en
+sortent (commun, solide, rare, épique, légendaire), et plus leurs bonus sont élevés.
+
+La Forge donne un débouché aux ressources du Village en dehors du Marché. Elle rend visible la
+progression du joueur, et prépare l'apport de bonus de combat au Donjon (bonus visé).
 
 ## Les règles métier
 
-Les règles que le domaine du module devra faire respecter, numérotées. Chacune devra
-être vérifiée par au moins un test.
-
-1.
-2.
-3.
+1. **Recette connue.** Une commande porte sur une recette du catalogue de la Forge ; toute
+   autre recette est refusée (`UNKNOWN_RECIPE`).
+2. **Un objet à la fois.** Tant qu'une commande attend son paiement ou est en fabrication,
+   toute nouvelle commande est refusée (`FORGE_BUSY`).
+3. **Inventaire limité.** Une commande est refusée si l'inventaire compte déjà 12 objets
+   (`INVENTORY_FULL`).
+4. **Paiement par le Village.** Le coût de la recette est prélevé dans le village du joueur.
+   Si le Village refuse le prélèvement (stock insuffisant), la commande est rejetée, aucun
+   objet n'est fabriqué et les quantités manquantes sont indiquées au joueur.
+5. **Durée de fabrication.** La fabrication commence à la confirmation du paiement et dure le
+   temps fixé par la recette. L'objet ne peut pas être retiré avant la fin (`NOT_READY`).
+6. **Annulation remboursée.** Une commande ne peut être annulée que pendant la fabrication.
+   L'annulation rembourse intégralement le coût payé (compensation). Une commande déjà retirée,
+   rejetée ou annulée ne peut plus l'être (`NOT_CANCELLABLE`).
+7. **Équipement.** Seul un objet de l'inventaire peut être équipé. Chaque emplacement (casque,
+   armure, arme, cape) porte au plus un objet : en équiper un nouveau remplace le précédent.
+   Un emplacement peut être vidé.
+8. **Gravure.** La gravure d'un objet est facultative : de 1 à 20 caractères, espaces de début
+   et de fin retirés. Elle ne concerne qu'un objet de l'inventaire du joueur.
+9. **Niveau de la forge.** La forge commence au niveau 1 et monte jusqu'au niveau 5. Chaque
+   amélioration a un coût croissant, payé par le Village comme une commande (règle 4) ; elle est
+   refusée au niveau maximal (`MAX_LEVEL_REACHED`) et pendant une fabrication (`FORGE_BUSY`).
+10. **Qualité des objets.** La qualité d'un objet est celle du niveau de la forge au moment de
+    la commande, et ne change plus ensuite : améliorer la forge n'améliore pas les objets déjà
+    commandés. Le bonus d'un objet est le bonus de base de sa recette multiplié par le
+    coefficient de sa qualité.
+11. **Réponses du Village idempotentes.** Une réponse du Village déjà prise en compte (même
+   identifiant de mouvement) n'a aucun effet : un message livré deux fois ne paie ni ne
+   rembourse deux fois.
 
 ## Les commandes et les lectures
 
 | Action du joueur | Commande ou lecture | Route envisagée |
 | --- | --- | --- |
-| | | |
+| Voir la forge : recettes, commande en cours, inventaire, équipement | Lecture | `GET /api/forge` |
+| Améliorer la forge | Commande `UpgradeForge` | `POST /api/forge/upgrade` |
+| Commander un objet | Commande `OrderItem` | `POST /api/forge/orders` |
+| Annuler la fabrication en cours | Commande `CancelOrder` | `POST /api/forge/orders/cancel` |
+| Retirer l'objet fabriqué | Commande `CollectItem` | `POST /api/forge/collect` |
+| Équiper un objet | Commande `EquipItem` | `POST /api/forge/equip` |
+| Vider un emplacement | Commande `UnequipSlot` | `POST /api/forge/unequip` |
+| Graver un nom sur un objet | Commande `EngraveItem` | `POST /api/forge/engrave` |
+| Réponse du Village à un prélèvement | Message `forge.transfer-result` | Boîte d'envoi |
+
+Toutes les routes sont réservées aux joueurs connectés, et n'agissent que sur la forge du
+joueur de la session : l'identifiant du joueur n'est jamais lu dans la requête.
 
 ## Le stockage envisagé
 
-Journal d'événements ou tables classiques, et la raison principale de ce choix.
+**Journal d'événements**, un flux par joueur (`forge-<playerId>`), selon le modèle decider et
+la concurrence optimiste, comme le Village et le Marché.
+
+Raison principale : la Forge est pilotée par une saga, dont chaque étape (commande, paiement
+confirmé ou refusé, annulation, remboursement) doit être enregistrée et rejouable ; et
+l'historique des objets forgés a une valeur de jeu (registre des fabrications, gravures). Les
+données ne sont pas destinées à disparaître rapidement, à la différence de la Taverne (ADR 0008).
 
 ## La communication avec les modules existants
 
-Le ou les modules concernés, le sens de la communication, et le moyen : messages par la
-boîte d'envoi, ou lecture du langage publié.
+- **Village**, dans les deux sens, par **messages de la boîte d'envoi** (saga orchestrée par la
+  Forge, comme celle du Marché au TD9) :
+  - la Forge envoie `realm.withdraw` pour prélever le coût, avec `replyTo: forge.transfer-result` ;
+    le Village répond `withdrawn` ou `refused` ;
+  - en cas d'annulation, la Forge envoie `realm.deposit` pour rembourser (étape de compensation).
+
+  L'amélioration de la forge suit la même saga : seul le motif du prélèvement change.
+
+  Le niveau de la forge est conservé par le module Forge, et non par le Village : le domaine du
+  Village (catalogue des bâtiments, production, événements déjà enregistrés) et son service
+  extrait (TD11) restent intacts. Sur la carte, la forge n'est qu'un repère de l'interface qui
+  mène à la page de la Forge.
+
+  Le Village n'est pas modifié : son langage publié accepte déjà ces deux sujets et l'adresse de
+  réponse. Les identifiants de mouvement sont construits par la Forge (commande + étape), ce qui
+  rend les échanges idempotents des deux côtés.
+- **Donjon** (bonus visé), par **lecture du langage publié** de la Forge : à l'arrivée d'un héros
+  dans une expédition, le Donjon lit les bonus de l'équipement porté. Le Donjon passerait par
+  `src/modules/forge/contracts.ts` et `index.ts`, sans importer de fichier interne.
 
 ## Les données personnelles
 
-Les données personnelles que le module conservera, ou « aucune ».
+- Les commandes, l'inventaire et l'équipement du joueur, rattachés à son identifiant.
+- Les **gravures**, texte libre saisi par le joueur.
+
+Le contributeur `personal-data.ts` les **exporte**, et **réécrit** les gravures à l'effacement du
+compte (même principe que le nom du village, ADR 0008). Un traitement est ajouté au registre des
+traitements.
 
 ## Les bonus visés
 
-Les bonus de la partie 3.2 que vous envisagez, par ordre de priorité. Cette liste
-n'engage pas : seuls les bonus réalisés et déclarés au rendu sont comptés.
+Par ordre de priorité :
+
+1. **B5** : saga avec étape compensable entre la Forge et le Village (prélèvement, puis
+   remboursement à l'annulation).
+2. **B2** : échéance gérée sans tâche de fond (fin de fabrication calculée à la lecture, comme
+   les échéances du Donjon).
+3. **B1** : canal temps réel propre au module (`forge-<playerId>`), réservé au propriétaire de
+   la forge.
+4. **B6** : communication avec un deuxième module, le Donjon, qui lit les bonus d'équipement.
+5. **B10** : test de bout en bout avec Playwright, sur le parcours « commander, attendre, retirer,
+   équiper ».
