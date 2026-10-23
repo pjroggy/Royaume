@@ -8,6 +8,10 @@ import type { CSSProperties, ReactNode } from 'react'
  * Le composant ne contient aucune logique : chaque module garde ses requêtes, ses commandes
  * et son temps réel, et ne lui confie que l'affichage.
  */
+
+// DETTE TECHNIQUE (DT-014) : les décors passés à Scene sont des composants client, envoyés au
+// navigateur avec l'écran. Remboursement : les rendre comme composants serveur, passés depuis
+// les pages, et ne garder côté client que les éléments interactifs.
 export function Scene({
   label,
   art,

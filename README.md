@@ -58,7 +58,7 @@ src/
   modules/            Modules métier, un répertoire par contexte délimité
   bootstrap/          Racine de composition de l'application
   services/           Racines de composition des services extraits
-  ui/                 Thème et composants d'interface partagés
+  ui/                 Thème, décors dessinés (ui/art) et composants d'interface partagés
 scripts/              Scripts d'exploitation, de mesure et de démarrage du service extrait
 drizzle/              Migrations de la base de données
 perf/                 Budget de performance et résultats des tests de charge
@@ -81,6 +81,23 @@ Un module n'est accessible depuis l'extérieur que par ses entrées publiques : 
 | `ranking` | Classement des joueurs, construit à partir des événements du Village et du Donjon | `/api/ranking` |
 | `market` | Marché : échanges de ressources entre joueurs, par une saga orchestrée | `/api/market` |
 | `tavern` | Taverne : salon de discussion commun et présence des joueurs, sans Event Sourcing | `/api/tavern` |
+
+## Interface
+
+L'apparence du jeu (un royaume de chats en dark fantasy) est entièrement portée par la couche
+d'interface ; les identifiants du domaine (`wood`, `stone`, `gold`, `goblin`...) ne changent pas
+(ADR 0002).
+
+- `src/ui/theme.ts` donne le libellé et le symbole de chaque entité du jeu.
+- `src/ui/art/` contient les décors dessinés en SVG (carte du Village, crypte, taverne, marché,
+  salle du Classement), le chat `CatAvatar` et ses emplacements d'équipement, les monstres et
+  les effets joués après une action du joueur. Ces composants n'ont aucune logique : chaque
+  module garde ses requêtes, ses commandes et son temps réel.
+- `app/art.css` définit les couleurs des décors pour le crépuscule et pour la nuit (variables
+  CSS), et leurs animations, toutes coupées lorsque le joueur demande moins de mouvement
+  (`prefers-reduced-motion`).
+- Le choix entre crépuscule, nuit et thème du système est conservé dans un cookie, lu au
+  rendu sur le serveur.
 
 ## Temps réel
 
@@ -224,3 +241,8 @@ pseudonymisée : plus aucune table ne le relie à une personne (ADR 0008).
 Le service Village extrait n'est pas prêt pour la production : ses migrations, la pagination
 de son flux publié et la distribution de sa boîte d'envoi restent à traiter. Ces limites, et
 les autres limites connues, sont recensées dans le registre de la dette technique.
+
+Les décors sont des composants client : leur dessin s'ajoute au code envoyé au navigateur
+(DT-014). Les personnages et les repères sont placés en pourcentage du décor : sur un écran
+étroit, le panneau passe sous le décor, mais les repères peuvent se chevaucher. L'interface
+n'est couverte par aucun test automatique.
