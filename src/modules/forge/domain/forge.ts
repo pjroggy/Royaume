@@ -276,6 +276,8 @@ export function decide(state: ForgeState, command: ForgeCommand, now: number): D
       })
 
     case 'CancelOrder': {
+      // DETTE TECHNIQUE DT-015 (docs/qualite/dette-technique.md) : un travail en attente de
+      // paiement n'a pas d'échéance ; si le prélèvement est abandonné, la forge reste bloquée.
       // Règle 6 : seule une fabrication en cours, et pas encore terminée, est annulable.
       const job = state.current
       if (job?.kind !== 'item' || job.status !== 'forging' || now >= job.readyAt) {

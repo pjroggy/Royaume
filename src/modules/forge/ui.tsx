@@ -128,7 +128,8 @@ function catProps(playerId: string, cat: PublicCat | undefined) {
     capeColor: CAPE_COLORS[gear?.cape?.recipe ?? ''] ?? '#6a1a2a',
   }
 }
-
+// DETTE TECHNIQUE DT-018 (docs/qualite/dette-technique.md) : tant que le chat n'est pas lu,
+// le chat par défaut est affiché, puis remplacé par celui du joueur.
 /** Le chat d'un joueur, avec son allure et son équipement, partout dans le jeu. */
 export function PlayerCat({
   playerId,

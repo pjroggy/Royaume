@@ -59,6 +59,8 @@ export const theme: Record<string, Look> = {
   market: { icon: GiShop, label: 'Marché' },
   tavern: { icon: GiBeerStein, label: 'Taverne' },
   forge: { icon: GiAnvilImpact, label: 'Forge' },
+  // DETTE TECHNIQUE DT-019 (docs/qualite/dette-technique.md) : les teintes sont choisies pour
+  // le thème de nuit ; leur contraste sur le thème de jour n'a pas été mesuré.
   // Ressources du Village.
   wood: { icon: GiFishCooked, color: '#5fa8d3', label: 'poisson' },
   stone: { icon: GiMilkCarton, color: '#d8d2c4', label: 'lait' },

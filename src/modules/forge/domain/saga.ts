@@ -29,6 +29,8 @@ export function requestsFor(playerId: string, event: ForgeEvent): SagaRequest[] 
       ]
 
     // Compensation : annulation de la fabrication, remboursement intégral (règle 6).
+    // DETTE TECHNIQUE DT-016 (docs/qualite/dette-technique.md) : le remboursement n'attend
+    // aucune réponse ; s'il était abandonné, rien ne le signalerait au joueur.
     case 'OrderCancelled':
       return [
         {

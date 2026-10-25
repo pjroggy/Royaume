@@ -96,7 +96,8 @@ export function createForgeService(
     const decision = await process(playerId, command)
     if (!decision.ok) throw new Error(`Forge de ${playerId} : ${decision.error.code}`)
   }
-
+  // DETTE TECHNIQUE DT-017 (docs/qualite/dette-technique.md) : chaque lecture rejoue tout le
+  // flux de la forge, sans instantané ; cette lecture en rejoue jusqu'à vingt.
   /**
    * Chats des joueurs désignés, tels que les voient les autres joueurs : allure et équipement
    * porté. C'est la lecture que proposent la Taverne et le Donjon pour dessiner les joueurs.
