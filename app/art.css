@@ -813,3 +813,40 @@
   animation: pin-ready 1.2s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) { .pin-ready { animation: none; } }
+/* ------------------------------------------------------------------------------------------
+ * Décor : la Forge (src/ui/art/forge-room.tsx) et son écran (src/modules/forge/ui.tsx).
+ * ---------------------------------------------------------------------------------------- */
+@keyframes forge-flicker { 0%, 100% { opacity: 1; } 40% { opacity: 0.72; } 60% { opacity: 0.95; } 80% { opacity: 0.68; } }
+@keyframes forge-fire { 0%, 100% { transform: scaleY(1); } 30% { transform: scaleY(1.12) translateY(-3px); } 60% { transform: scaleY(0.94); } }
+@keyframes forge-ember { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(16px, -220px); opacity: 0; } }
+@keyframes forge-steam { 0% { transform: translateY(0) scale(0.8); opacity: 0; } 30% { opacity: 0.6; } 100% { transform: translateY(-40px) scale(1.5); opacity: 0; } }
+@keyframes forge-spark { 0% { transform: translate(0, 0); opacity: 1; } 100% { transform: translate(var(--sx, 30px), -40px); opacity: 0; } }
+@keyframes forge-ready { 0%, 100% { box-shadow: 0 0 0 0 rgb(124 240 143 / 0.6); } 50% { box-shadow: 0 0 0 10px rgb(124 240 143 / 0); } }
+.art-forge .flicker { animation: forge-flicker 1.4s ease-in-out infinite; }
+.art-forge .fire { transform-box: fill-box; transform-origin: 50% 100%; animation: forge-fire 0.9s ease-in-out infinite; }
+.art-forge .ember { animation: forge-ember 4s linear infinite; }
+.art-forge .steam { transform-box: fill-box; transform-origin: center; animation: forge-steam 2.8s ease-out infinite; }
+.art-forge .spark { animation: forge-spark 0.7s ease-out infinite; }
+.art-forge .spark:nth-child(2) { --sx: -26px; }
+.art-forge .spark:nth-child(3) { --sx: 8px; }
+.anvil-item { pointer-events: auto; text-align: center; }
+.ready-item { animation: forge-ready 1.6s ease-in-out infinite; background: linear-gradient(180deg, #8fe08a, #2f8a3a); border-color: #b4f59a; color: #0c1a0c; }
+button.secondary { background: rgb(0 0 0 / 0.35); color: var(--ink); border: 1px solid var(--frame); }
+.quality { font-size: 0.85rem; font-weight: 700; padding: 1px 8px; border-radius: 99px; border: 1px solid currentColor; }
+.quality[data-quality='common'] { color: #c9c2d6; }
+.quality[data-quality='sturdy'] { color: #8fe08a; }
+.quality[data-quality='rare'] { color: #7cc8ff; }
+.quality[data-quality='epic'] { color: #c9a2ff; }
+.quality[data-quality='legendary'] { color: #ffb84d; text-shadow: 0 0 8px rgb(255 160 60 / 0.6); }
+.recipes, .items { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.recipes li, .items li { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px 0; border-top: 1px solid rgb(212 166 74 / 0.18); }
+.recipes button { min-height: 34px; padding: 6px 12px; }
+.items li[data-equipped] { background: rgb(255 154 77 / 0.1); border-radius: 8px; padding: 6px 8px; }
+.items form { max-width: none; display: flex; gap: 6px; }
+.items input { width: 12em; }
+.engraving { color: var(--magic); }
+.slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 8px 0 12px; }
+.slot { padding: 8px 10px; border-radius: 10px; border: 1px dashed var(--frame); }
+.slot[data-filled='true'] { border-style: solid; background: rgb(255 154 77 / 0.08); }
+@media (max-width: 640px) { .slots { grid-template-columns: repeat(2, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .ready-item { animation: none; } }

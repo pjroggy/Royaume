@@ -22,6 +22,7 @@ export const theme: Record<string, Look> = {
   ranking: { glyph: '🏆', label: 'Classement' },
   market: { glyph: '🧺', label: 'Marché' },
   tavern: { glyph: '🏮', label: 'Taverne' },
+  forge: { glyph: '⚒️', label: 'Forge' },
   // Ressources du Village.
   wood: { glyph: '🐟', label: 'poisson' },
   stone: { glyph: '🥛', label: 'lait' },
@@ -37,6 +38,25 @@ export const theme: Record<string, Look> = {
   skeleton: { glyph: '🦴', label: 'Chien squelette' },
   troll: { glyph: '🌪️', label: "L'Aspirateur" },
   door: { glyph: '🚪', label: 'Porte' },
+  // Recettes de la Forge.
+  hornedHelm: { glyph: '⛑️', label: 'Heaume cornu' },
+  shadowHood: { glyph: '🎭', label: "Capuche d'ombre" },
+  rubyCuirass: { glyph: '🛡️', label: 'Cuirasse de rubis' },
+  sardineMail: { glyph: '🐟', label: 'Cotte de sardines' },
+  emberClaw: { glyph: '🔥', label: 'Lame-griffe ardente' },
+  steelClaws: { glyph: '🗡️', label: "Griffes d'acier" },
+  midnightCape: { glyph: '🌙', label: 'Cape de minuit' },
+  catnipCape: { glyph: '🌿', label: "Cape d'herbe à chat" },
+  // Emplacements d'équipement et qualités des objets forgés.
+  helmet: { glyph: '⛑️', label: 'casque' },
+  armor: { glyph: '🛡️', label: 'armure' },
+  weapon: { glyph: '🗡️', label: 'arme' },
+  cape: { glyph: '🧣', label: 'cape' },
+  common: { glyph: '⚪', label: 'commun' },
+  sturdy: { glyph: '🟢', label: 'solide' },
+  rare: { glyph: '🔵', label: 'rare' },
+  epic: { glyph: '🟣', label: 'épique' },
+  legendary: { glyph: '🟠', label: 'légendaire' },
 }
 
 /** Apparence d'une entité ; une apparence neutre si l'entité n'est pas décrite. */
