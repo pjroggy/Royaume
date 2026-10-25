@@ -5,7 +5,7 @@ réalisés par Royaumes. Il est tenu à jour à chaque évolution du jeu qui ajo
 supprime une donnée personnelle, dans le même commit que cette évolution.
 
 - Responsable du traitement : Pierre-Jean Roggy, auteur du projet ; contact par le dépôt GitHub `pjroggy/Royaume`.
-- Date de dernière mise à jour : 2026-10-23.
+- Date de dernière mise à jour : 2026-10-25.
 
 ## Sous-traitants
 
@@ -25,6 +25,13 @@ supprime une donnée personnelle, dans le même commit que cette évolution.
 | T5 | Présence dans la Taverne | Indiquer les joueurs présents | Identifiant, nom, date du dernier signal | Joueurs | Exécution du contrat | Deux minutes après le dernier signal | `tavern.presence` |
 | T6 | Registre des effacements | Démontrer la réalisation des effacements | Date de l'effacement, nombre d'événements réécrits ; aucune donnée sur le joueur | Aucune personne identifiable | Obligation légale (responsabilité, article 5) | Illimitée | `platform.erasures` |
 | T7 | Journaux techniques | Diagnostiquer les erreurs, assurer la sécurité | Adresse IP, adresses des requêtes, messages d'erreur | Joueurs, visiteurs | Intérêt légitime (sécurité, maintenance) | Une heure : durée de conservation des journaux d'exécution sur l'offre Hobby de Vercel | Vercel |
+| T8 | Forge et chat du joueur | Faire fonctionner la Forge, et représenter le joueur par son chat dans le jeu | Identifiant du joueur ; gravures (texte libre de 20 caractères au plus) ; niveau de la forge, inventaire, équipement ; allure du chat (silhouette, pelage, regard, parmi les choix du jeu) | Joueurs | Exécution du contrat | Jusqu'à la suppression du compte ; ensuite, gravures remplacées par « Gravure effacée », et allure et équipement conservés sous l'identifiant pseudonymisé (ADR 0008) | `platform.events` (flux `forge-<joueur>`), `platform.outbox` (identifiant du joueur dans les mouvements de la saga) |
+
+Mesures de sécurité du traitement T8 : routes réservées aux joueurs connectés, chaque joueur
+n'agissant que sur sa propre forge ; gravures absentes de la vue publique des chats (type
+`PublicCat`) et du canal temps réel des autres joueurs, celui-ci étant réservé au propriétaire ;
+export et réécriture des gravures par le contributeur `src/modules/forge/personal-data.ts`
+(revue de sécurité de la Forge, F2, F9, F10 et F14).
 
 ## Droits des personnes
 
