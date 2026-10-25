@@ -28,10 +28,13 @@ export function requestsFor(playerId: string, event: ForgeEvent): SagaRequest[] 
         },
       ]
 
-    // Compensation : annulation de la fabrication, remboursement intégral (règle 6).
+    // Compensation : annulation de la fabrication, remboursement intégral (règle 6), ou
+    // prélèvement confirmé après l'abandon du travail (règle 13). Les deux utilisent le même
+    // identifiant de remboursement : un travail n'est jamais remboursé deux fois.
     // DETTE TECHNIQUE DT-016 (docs/qualite/dette-technique.md) : le remboursement n'attend
     // aucune réponse ; s'il était abandonné, rien ne le signalerait au joueur.
     case 'OrderCancelled':
+    case 'LatePaymentRefunded':
       return [
         {
           kind: 'deposit',
@@ -42,7 +45,7 @@ export function requestsFor(playerId: string, event: ForgeEvent): SagaRequest[] 
       ]
 
     // Les autres événements n'engagent aucun mouvement de ressources ; un paiement refusé
-    // n'a rien prélevé, il n'y a rien à compenser.
+    // n'a rien prélevé, et un paiement abandonné n'est compensé que s'il est confirmé ensuite.
     default:
       return []
   }

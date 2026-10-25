@@ -265,9 +265,9 @@ Les décors sont des composants client : leur dessin s'ajoute au code envoyé au
 étroit, le panneau passe sous le décor, mais les repères peuvent se chevaucher. L'interface
 n'est couverte par aucun test automatique.
 
-Une fabrication de la Forge dont le message de prélèvement est abandonné reste en attente de
-paiement : la forge refuse alors toute commande, jusqu'à la relance du message par
-`scripts/dead-letters.ts` (ADR 0011). Chaque lecture d'une forge rejoue tout son flux, sans
+Un travail de la Forge resté sans réponse du Village ne peut être abandonné qu'au bout de dix
+minutes ; un remboursement abandonné dans la boîte d'envoi n'est signalé qu'aux exploitants
+(ADR 0014). Chaque lecture d'une forge rejoue tout son flux, sans
 instantané, et `GET /api/forge/cats` en rejoue jusqu'à vingt (ADR 0010). Les chats des
 joueurs sont lus par le navigateur après le chargement de chaque écran : ils apparaissent un
 instant après la scène. Les bonus de l'équipement ne sont pas encore appliqués aux combats du

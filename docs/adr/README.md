@@ -19,3 +19,4 @@ un nouvel ADR est rédigé et l'ancien prend le statut « remplacé ».
 | [0011](0011-forge-saga-village.md) | Paiement des fabrications par une saga orchestrée par la Forge, échangée avec le Village par messages | Accepté |
 | [0012](0012-chat-du-joueur-composition-interface.md) | Le chat du joueur : données dans la Forge, affichage par composition d'interface | Accepté |
 | [0013](0013-icones-game-icons.md) | Icônes Game-icons.net, par react-icons, à la place des émojis | Accepté |
+| [0014](0014-forge-delai-paiement.md) | Délai de réponse du Village et remboursement d'un prélèvement tardif, pour la Forge | Accepté |

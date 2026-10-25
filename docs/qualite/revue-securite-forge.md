@@ -22,19 +22,18 @@
 | F10 | Les gravures ne sont jamais montrées aux autres joueurs | Test « présente l'allure et l'équipement des joueurs demandés, sans leurs gravures » | Le test grave « Secret » sur l'objet équipé d'Alice, puis lit son chat au nom de Bob : la réponse ne contient pas ce texte. Le type `PublicCat` (`domain/view.ts`) ne contient aucun champ de gravure : un oubli de filtre est impossible. | Conforme |
 | F11 | Une gravure ne peut pas injecter de code dans la page | Gravure de `<img src=x onerror=alert(1)>` ; `git grep -n dangerouslySetInnerHTML -- src app` | React affiche la gravure comme du texte, échappé. La recherche ne trouve aucun usage de `dangerouslySetInnerHTML`. La gravure est limitée à 20 caractères. Vérification manuelle à mener par l'auteur (voir plus bas). | Conforme |
 | F12 | La lecture publique des chats ne permet pas de surcharger le service | Test « refuse une lecture sans identifiant, ou de plus de vingt chats (400) » ; lecture de `service.cats` | Une requête est limitée à 20 identifiants distincts de 64 caractères au plus. Mais chaque identifiant provoque le rejeu complet d'un flux, sans instantané (DT-017), et aucune limitation du nombre de requêtes ne protège la route. Un joueur connecté peut aussi lire l'allure et l'équipement de n'importe quel identifiant, ce qui est voulu, puisque ces informations sont publiques dans le jeu. | Risque accepté |
-| F13 | Une saga interrompue ne bloque pas durablement la forge du joueur | Lecture de `decide` (`CancelOrder`) et de la boîte d'envoi | Si le message `realm.withdraw` est abandonné, le travail reste en attente de paiement. La forge refuse alors toute commande (`FORGE_BUSY`), et l'annulation est refusée dans cet état. Seule une relance par `scripts/dead-letters.ts` débloque le joueur (DT-015). | Non conforme |
+| F13 | Une saga interrompue ne bloque pas durablement la forge du joueur, et ne lui fait rien perdre | Test « libère la forge après le délai, puis rembourse un prélèvement confirmé plus tard » ; rubrique « Règle 13 - paiement sans réponse » | Constat initial : un prélèvement abandonné bloquait la forge (DT-015). Après correction (ADR 0014), un travail sans réponse du Village peut être abandonné au bout de dix minutes. Si le prélèvement est confirmé ensuite, la Forge le rembourse une seule fois. Le test simule une panne du service Village, l'abandon, puis le retour du service : le village est prélevé puis remboursé, et la forge est libre. | Conforme |
 | F14 | Les données personnelles de la Forge sont exportées, puis effacées avec le compte | Test « exporte la forge du joueur, et efface ses gravures avec son compte » ; fonction d'aptitude « déclare les données personnelles de chaque module qui conserve des données » | Le test réussit : l'export contient la gravure, et après la suppression du compte, l'événement `ItemEngraved` contient « Gravure effacée ». L'allure du chat est exportée. Elle n'est pas effacée, car elle ne contient que des choix du jeu, sans texte libre. | Conforme |
 | F15 | Les dépendances ajoutées n'introduisent pas de vulnérabilité connue dans le code de production | `pnpm audit` ; `pnpm why esbuild uuid` | `react-icons` 5.5.0 n'est concerné par aucune alerte. `pnpm audit` signale deux vulnérabilités modérées antérieures à la Forge : `esbuild` ≤ 0.24.2 (par `drizzle-kit`) et `uuid` < 11.1.1 (par `autocannon`). Ce sont deux dépendances de développement, absentes du code déployé. | Risque accepté |
 
 ## Synthèse
 
-Sur 15 exigences : 12 conformes, 1 non conforme (F13), 2 en risque accepté (F12, F15).
+Sur 15 exigences : 13 conformes, 2 en risque accepté (F12, F15). F13, non conforme à la
+première revue, a été corrigée le 2026-10-25.
 
 Actions décidées :
 
-- **F13** : consigner la dette DT-015. À rembourser par une échéance de paiement calculée à la
-  lecture, après laquelle le travail en attente peut être annulé (ADR 0011, Réexamen). D'ici
-  là, `scripts/dead-letters.ts` permet de relancer le message.
+- **F13** : dette DT-015 consignée, puis remboursée le 2026-10-25 (règle 13, ADR 0014).
 - **F12** : risque accepté pour la taille actuelle du jeu. À réexaminer avec la dette DT-017
   (instantané, ou projection des chats publics) si la route dépasse le budget de
   `perf/budget.json`.

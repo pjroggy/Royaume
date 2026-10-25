@@ -48,6 +48,12 @@ export interface ForgeView {
     quality: Quality | null
     readyAt: number | null
     remainingMs: number | null
+    /**
+     * Pour un travail en attente de paiement : instant à partir duquel le joueur peut
+     * l'abandonner (règle 13), et vrai si cet instant est passé. Calculé à la lecture.
+     */
+    paymentDueAt: number | null
+    abandonable: boolean
   } | null
   inventory: ItemView[]
   equipped: Record<Slot, ItemView | null>
@@ -92,6 +98,8 @@ export function toView(state: ForgeState, now: number): ForgeView {
       quality: job.quality,
       readyAt: forging ? job.readyAt : null,
       remainingMs: forging ? Math.max(0, job.readyAt - now) : null,
+      paymentDueAt: forging ? null : job.paymentDueAt,
+      abandonable: !forging && now >= job.paymentDueAt,
     }
   } else if (job) {
     current = {
@@ -101,6 +109,8 @@ export function toView(state: ForgeState, now: number): ForgeView {
       quality: null,
       readyAt: null,
       remainingMs: null,
+      paymentDueAt: job.paymentDueAt,
+      abandonable: now >= job.paymentDueAt,
     }
   }
 

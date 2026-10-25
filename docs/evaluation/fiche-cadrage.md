@@ -54,6 +54,10 @@ progression du joueur, et prépare l'apport de bonus de combat au Donjon (bonus 
 12. **Allure du chat.** Le joueur choisit une silhouette (chat ou chaton), un pelage et une
     couleur d'yeux, uniquement parmi ceux que propose le jeu (`INVALID_LOOK` sinon). Les autres
     joueurs voient son allure et l'équipement qu'il porte, mais jamais ses gravures.
+13. **Paiement sans réponse.** Un travail qui attend la réponse du Village depuis dix minutes
+    peut être abandonné par le joueur (`NOT_CANCELLABLE` avant ce délai) : la forge est alors
+    libre. Si le Village confirme ensuite le prélèvement, la Forge le rembourse, une seule fois.
+    Ajoutée le 2026-10-25, après la revue de sécurité (ADR 0014).
 
 ## Les commandes et les lectures
 
@@ -62,7 +66,7 @@ progression du joueur, et prépare l'apport de bonus de combat au Donjon (bonus 
 | Voir la forge : recettes, commande en cours, inventaire, équipement | Lecture | `GET /api/forge` |
 | Améliorer la forge | Commande `UpgradeForge` | `POST /api/forge/upgrade` |
 | Commander un objet | Commande `OrderItem` | `POST /api/forge/orders` |
-| Annuler la fabrication en cours | Commande `CancelOrder` | `POST /api/forge/orders/cancel` |
+| Annuler la fabrication en cours, ou abandonner un travail sans réponse du Village | Commande `CancelOrder` | `POST /api/forge/orders/cancel` |
 | Retirer l'objet fabriqué | Commande `CollectItem` | `POST /api/forge/collect` |
 | Équiper un objet | Commande `EquipItem` | `POST /api/forge/equip` |
 | Vider un emplacement | Commande `UnequipSlot` | `POST /api/forge/unequip` |

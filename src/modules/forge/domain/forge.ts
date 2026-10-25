@@ -13,6 +13,7 @@ import {
   isRecipe,
   isValidLook,
   MAX_FORGE_LEVEL,
+  PAYMENT_TIMEOUT_MS,
   type Quality,
   qualityAt,
   RECIPES,
@@ -40,10 +41,19 @@ export type Job =
       quality: Quality
       cost: Amounts
       status: 'paying' | 'forging'
+      /** Instant à partir duquel un paiement sans réponse peut être abandonné (règle 13). */
+      paymentDueAt: number
       /** Fin de la fabrication ; 0 tant que le paiement n'est pas confirmé. */
       readyAt: number
     }
-  | { kind: 'upgrade'; no: number; toLevel: number; cost: Amounts; status: 'paying' }
+  | {
+      kind: 'upgrade'
+      no: number
+      toLevel: number
+      cost: Amounts
+      status: 'paying'
+      paymentDueAt: number
+    }
 
 /** Objet de l'inventaire. */
 export interface Item {
@@ -66,6 +76,11 @@ export interface ForgeState {
   refusal: { no: number; missing: Amounts } | null
   /** Allure du chat choisie par le joueur ; null tant qu'il n'en a choisi aucune (règle 12). */
   look: CatLook | null
+  /**
+   * Travaux abandonnés en attente de paiement, par numéro, avec leur coût : si le Village
+   * confirme plus tard le prélèvement, la Forge doit le rembourser (règle 13).
+   */
+  abandoned: Record<number, Amounts>
 }
 
 export const initialState: ForgeState = {
@@ -76,6 +91,7 @@ export const initialState: ForgeState = {
   equipped: { helmet: null, armor: null, weapon: null, cape: null },
   refusal: null,
   look: null,
+  abandoned: {},
 }
 
 // ---------------------------------------------------------------------------
@@ -92,6 +108,8 @@ export type ForgeEvent =
   | { type: 'PaymentRefused'; data: { no: number; missing: Amounts; at: number } }
   | { type: 'ForgeUpgraded'; data: { no: number; level: number; at: number } }
   | { type: 'OrderCancelled'; data: { no: number; refund: Amounts; at: number } }
+  | { type: 'PaymentAbandoned'; data: { no: number; cost: Amounts; at: number } }
+  | { type: 'LatePaymentRefunded'; data: { no: number; refund: Amounts; at: number } }
   | { type: 'ItemCollected'; data: { no: number; itemId: string; at: number } }
   | { type: 'ItemEquipped'; data: { itemId: string; slot: Slot; at: number } }
   | { type: 'SlotEmptied'; data: { slot: Slot; at: number } }
@@ -158,6 +176,14 @@ export function playerIdOf(transferId: string): string | null {
   return parts.length === 4 && parts[0] === TRANSFER_PREFIX ? parts[1] : null
 }
 
+/** Numéro du travail dont un identifiant de prélèvement désigne le paiement ; null sinon. */
+export function paidNoOf(transferId: string): number | null {
+  const parts = transferId.split(':')
+  if (parts.length !== 4 || parts[0] !== TRANSFER_PREFIX || parts[3] !== 'pay') return null
+  const no = Number(parts[2])
+  return Number.isInteger(no) && no > 0 ? no : null
+}
+
 /** Identifiant d'un objet, déduit du numéro du travail qui l'a fabriqué. */
 export const itemIdOf = (no: number) => `item-${no}`
 
@@ -168,19 +194,36 @@ export const itemIdOf = (no: number) => `item-${no}`
 export function evolve(state: ForgeState, event: ForgeEvent): ForgeState {
   switch (event.type) {
     case 'ItemOrdered': {
-      const { no, recipe, quality, cost } = event.data
+      const { no, recipe, quality, cost, at } = event.data
+      const paymentDueAt = at + PAYMENT_TIMEOUT_MS
       return {
         ...state,
         lastNo: no,
-        current: { kind: 'item', no, recipe, quality, cost, status: 'paying', readyAt: 0 },
+        current: {
+          kind: 'item',
+          no,
+          recipe,
+          quality,
+          cost,
+          status: 'paying',
+          paymentDueAt,
+          readyAt: 0,
+        },
       }
     }
     case 'UpgradeOrdered': {
-      const { no, toLevel, cost } = event.data
+      const { no, toLevel, cost, at } = event.data
       return {
         ...state,
         lastNo: no,
-        current: { kind: 'upgrade', no, toLevel, cost, status: 'paying' },
+        current: {
+          kind: 'upgrade',
+          no,
+          toLevel,
+          cost,
+          status: 'paying',
+          paymentDueAt: at + PAYMENT_TIMEOUT_MS,
+        },
       }
     }
     case 'PaymentConfirmed': {
@@ -200,6 +243,16 @@ export function evolve(state: ForgeState, event: ForgeEvent): ForgeState {
       return { ...state, level: event.data.level, current: null, refusal: null }
     case 'OrderCancelled':
       return { ...state, current: null }
+    case 'PaymentAbandoned':
+      return {
+        ...state,
+        current: null,
+        abandoned: { ...state.abandoned, [event.data.no]: event.data.cost },
+      }
+    case 'LatePaymentRefunded': {
+      const { [event.data.no]: _refunded, ...abandoned } = state.abandoned
+      return { ...state, abandoned }
+    }
     case 'ItemCollected': {
       const job = state.current
       if (job?.kind !== 'item') return state
@@ -276,13 +329,16 @@ export function decide(state: ForgeState, command: ForgeCommand, now: number): D
       })
 
     case 'CancelOrder': {
-      // DETTE TECHNIQUE DT-015 (docs/qualite/dette-technique.md) : un travail en attente de
-      // paiement n'a pas d'échéance ; si le prélèvement est abandonné, la forge reste bloquée.
-      // Règle 6 : seule une fabrication en cours, et pas encore terminée, est annulable.
       const job = state.current
-      if (job?.kind !== 'item' || job.status !== 'forging' || now >= job.readyAt) {
-        return fail({ code: 'NOT_CANCELLABLE' })
+      // Règle 13 : un travail resté sans réponse du Village au-delà du délai est abandonné.
+      // Rien n'a été prélevé à notre connaissance : rien n'est remboursé maintenant, mais le
+      // coût est retenu, pour le cas où le Village confirmerait plus tard le prélèvement.
+      if (job?.status === 'paying') {
+        if (now < job.paymentDueAt) return fail({ code: 'NOT_CANCELLABLE' })
+        return accept({ type: 'PaymentAbandoned', data: { no: job.no, cost: job.cost, at: now } })
       }
+      // Règle 6 : seule une fabrication en cours, et pas encore terminée, est annulable.
+      if (job?.kind !== 'item' || now >= job.readyAt) return fail({ code: 'NOT_CANCELLABLE' })
       return accept({ type: 'OrderCancelled', data: { no: job.no, refund: job.cost, at: now } })
     }
 
@@ -341,17 +397,26 @@ export function decide(state: ForgeState, command: ForgeCommand, now: number): D
 /**
  * Réponse du Village à un prélèvement. Seule la réponse attendue pour le travail en cours
  * fait progresser la saga ; toute autre réponse (doublon, réponse tardive, accusé de réception
- * d'un remboursement) est ignorée (règle 11). Le joueur n'est pas vérifié ici : la réponse est
- * adressée au flux de sa forge, désigné par l'identifiant du mouvement.
+ * d'un remboursement) est ignorée (règle 11), sauf la confirmation tardive du prélèvement
+ * d'un travail abandonné, qui est remboursée (règle 13). Le joueur n'est pas vérifié ici : la
+ * réponse est adressée au flux de sa forge, désigné par l'identifiant du mouvement.
  */
 function recordTransferResult(
   state: ForgeState,
   result: Extract<ForgeCommand, { type: 'RecordTransferResult' }>,
   now: number,
 ): Decision {
+  // Règle 13 : prélèvement confirmé pour un travail déjà abandonné. Le joueur n'a rien reçu :
+  // la Forge rembourse aussitôt, une seule fois, puisque le travail quitte alors la liste.
+  const no = paidNoOf(result.transferId)
+  const owed = no === null ? undefined : state.abandoned[no]
+  if (no !== null && owed) {
+    if (result.outcome !== 'withdrawn') return accept()
+    return accept({ type: 'LatePaymentRefunded', data: { no, refund: owed, at: now } })
+  }
+
   const job = state.current
-  if (job?.status !== 'paying') return accept()
-  if (!result.transferId.endsWith(`:${job.no}:pay`)) return accept()
+  if (job?.status !== 'paying' || no !== job.no) return accept()
 
   // Règle 4 : paiement refusé, le travail est abandonné ; rien n'a été prélevé.
   if (result.outcome === 'refused') {

@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import type { ForgeView } from '@/modules/forge/contracts'
 import type { Stock } from '@/modules/realm/contracts'
+import type { Db } from '@/platform/db/client'
 import { createTestApi } from './testing'
 
 type TestApi = Awaited<ReturnType<typeof createTestApi>>
@@ -133,6 +134,51 @@ describe('API du module Forge - saga de paiement avec le Village', () => {
 
     const ordered = await viewOf(await order(api))
     expect(ordered.current).toMatchObject({ quality: 'sturdy' })
+  })
+})
+
+/** Types des événements d'un flux, dans une base donnée, par ordre de version. */
+async function typesIn(db: Db | null, stream: string) {
+  const result = await (db as Db).execute(
+    sql`SELECT type FROM platform.events WHERE stream = ${stream} ORDER BY version`,
+  )
+  return (result as unknown as { rows: { type: string }[] }).rows.map((row) => row.type)
+}
+
+describe('API du module Forge - paiement sans réponse du Village', () => {
+  it('libère la forge après le délai, puis rembourse un prélèvement confirmé plus tard', async () => {
+    // Le Village est extrait dans un service distinct, dont le test simule la panne.
+    const api = await createTestApi({ villageService: true })
+    await api.post('/api/realm/village', { name: 'Valombre' })
+
+    // Le service tombe en panne : la commande est enregistrée, mais le prélèvement ne peut
+    // pas être demandé. Le travail attend son paiement, et ne peut pas encore être abandonné.
+    api.setServiceUp(false)
+    const ordered = await viewOf(await order(api))
+    expect(ordered.current).toMatchObject({ status: 'paying', abandonable: false })
+    expect((await api.post('/api/forge/orders/cancel', {})).status).toBe(409)
+
+    // Dix minutes sans réponse : le joueur abandonne le travail, et la forge est libre.
+    api.advance(10)
+    const freed = await viewOf(await api.post('/api/forge/orders/cancel', {}))
+    expect(freed.current).toBeNull()
+
+    // Le service revient : le prélèvement en attente est enfin traité, et confirmé. La Forge
+    // rembourse aussitôt ce travail abandonné.
+    api.setServiceUp(true)
+    api.advance(1)
+    await api.get('/api/forge')
+    await api.get('/api/forge')
+    expect(await typesIn(api.serviceDb, 'village-alice')).toEqual([
+      'VillageFounded',
+      'ResourcesWithdrawn',
+      'ResourcesDeposited',
+    ])
+    expect(await typesIn(api.db, 'forge-alice')).toEqual([
+      'ItemOrdered',
+      'PaymentAbandoned',
+      'LatePaymentRefunded',
+    ])
   })
 })
 

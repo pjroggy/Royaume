@@ -115,6 +115,13 @@ export function bonusOf(recipe: RecipeId, quality: Quality) {
   return { attack: Math.round(attack * factor), defense: Math.round(defense * factor) }
 }
 
+/**
+ * Délai de réponse du Village à un prélèvement (règle 13). Passé ce délai, le joueur peut
+ * abandonner un travail resté en attente de paiement. Dans le cas ordinaire, la réponse arrive
+ * pendant la requête de commande : seul un message bloqué dans la boîte d'envoi l'atteint.
+ */
+export const PAYMENT_TIMEOUT_MS = 10 * MINUTE
+
 /** Coût de base de l'amélioration de la forge, multiplié à chaque niveau (règle 9). */
 export const UPGRADE_BASE_COST = { wood: 150, stone: 100 } satisfies Amounts
 export const UPGRADE_GROWTH = 2

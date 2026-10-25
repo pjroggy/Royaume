@@ -8,14 +8,14 @@
 ## Exigences minimales
 
 Les tests du domaine sont dans `src/modules/forge/domain/forge.test.ts`, une rubrique
-`describe` par règle de la fiche (« Règle 1 - recette connue » à « Règle 12 - allure du
-chat »). Les tests de l'API sont dans `src/bootstrap/forge-api.test.ts`.
+`describe` par règle de la fiche (« Règle 1 - recette connue » à « Règle 13 - paiement
+sans réponse »). Les tests de l'API sont dans `src/bootstrap/forge-api.test.ts`.
 
 | N° | Fichiers principaux | Tests qui la vérifient |
 | --- | --- | --- |
 | E1 | `src/modules/forge/` : `domain/` (catalog, forge, saga, view), `application/` (forge-service, forge-repository), `infrastructure/event-store-forge-repository.ts`, `api.ts`, `messages.ts`, `personal-data.ts`, `index.ts`, `contracts.ts`, `ui.tsx` | `pnpm lint:archi` (dependency-cruiser : domaine pur, application sans infrastructure, entrées publiques) |
 | E2 | `src/bootstrap/create-api.ts` (`createForgeModule`, routes `/forge`, gestionnaires, canal, données personnelles) ; `src/ui/app-shell.tsx` (entrée « Forge » de la navigation) ; `app/(jeu)/forge/page.tsx`, `app/(jeu)/avatar/page.tsx` | Tous les tests de `forge-api.test.ts`, qui passent par l'application assemblée (`createTestApi`) |
-| E3 | `src/modules/forge/domain/forge.ts` (`decide`, `evolve`), `domain/catalog.ts`, `domain/saga.ts`, `domain/view.ts` | `domain/forge.test.ts` : rubriques « Règle 1 » à « Règle 12 », 33 tests |
+| E3 | `src/modules/forge/domain/forge.ts` (`decide`, `evolve`), `domain/catalog.ts`, `domain/saga.ts`, `domain/view.ts` | `domain/forge.test.ts` : rubriques « Règle 1 » à « Règle 13 », 38 tests |
 | E4 | Journal d'événements, modèle decider, un flux `forge-<joueur>` : `infrastructure/event-store-forge-repository.ts` ; aucune table, donc aucune migration (ADR 0010) | Tests du domaine (`replay`, `decide`) ; « prélève le coût dans le village et commence la fabrication » |
 | E5 | `src/bootstrap/create-api.ts` (`requireUser` sur `/forge` et `/forge/*`) ; `api.ts` (joueur lu dans `c.var.userId`) ; `contracts.ts` (schémas Zod) | « refuse une requête anonyme (401) » ; « n'agit que sur la forge du joueur connecté » ; « refuse une entrée invalide (400) et une recette inconnue (404) » ; « grave un objet, et refuse une gravure trop longue (400) » ; « enregistre l'allure choisie, et refuse une couleur qui n'est pas proposée (400) » ; « refuse une lecture sans identifiant, ou de plus de vingt chats (400) » |
 | E6 | Messages de la boîte d'envoi avec le Village : `domain/saga.ts`, `application/forge-service.ts` (`realm.withdraw`, `realm.deposit`), `messages.ts` (`forge.transfer-result`) ; Village non modifié (ADR 0011) | « prélève le coût dans le village… » ; « rejette la commande, sans rien prélever, lorsque le village ne peut pas payer » ; « rembourse intégralement une fabrication annulée (compensation) » ; « ignore une réponse du Village livrée deux fois… » |
@@ -30,7 +30,7 @@ chat »). Les tests de l'API sont dans `src/bootstrap/forge-api.test.ts`.
 | --- | --- | --- | --- | --- |
 | B1 | Canal temps réel `forge-<joueur>`, réservé au propriétaire de la forge | `src/modules/forge/index.ts` (`channelPolicy`), `ui.tsx` (`useChannel`) | « autorise un joueur à écouter le canal de sa forge, qui transmet ses événements » ; « refuse l'écoute de la forge d'un autre joueur (403) » | ADR 0010 (section B1) ; revue de la Forge, F9 |
 | B2 | Fin de fabrication gérée sans tâche de fond : échéance `readyAt` enregistrée, état « prêt » calculé à la lecture, retrait refusé avant l'échéance | `domain/forge.ts`, `domain/view.ts` (`toView`), `src/ui/use-countdown.ts` | Rubrique « Règle 5 - durée de fabrication » ; « refuse le retrait avant la fin de la fabrication, et l'accepte ensuite » | ADR 0010 (section B2) ; revue de la Forge, F8 |
-| B5 | Saga avec étape compensable entre la Forge et le Village : prélèvement, puis remboursement intégral à l'annulation | `domain/saga.ts`, `application/forge-service.ts`, `messages.ts` | « rembourse intégralement une fabrication annulée (compensation) » ; rubriques « Règle 6 - annulation remboursée » et « Règle 11 - réponses du Village idempotentes » ; « ignore une réponse du Village livrée deux fois… » | ADR 0011 ; diagramme de séquence de `docs/architecture.md` ; revue de la Forge, F5 et F6 |
+| B5 | Saga avec étape compensable entre la Forge et le Village : prélèvement, puis remboursement intégral à l'annulation | `domain/saga.ts`, `application/forge-service.ts`, `messages.ts` | « rembourse intégralement une fabrication annulée (compensation) » ; rubriques « Règle 6 - annulation remboursée », « Règle 11 - réponses du Village idempotentes » et « Règle 13 - paiement sans réponse » ; « ignore une réponse du Village livrée deux fois… » ; « libère la forge après le délai, puis rembourse un prélèvement confirmé plus tard » | ADR 0011, ADR 0014 ; diagramme de séquence de `docs/architecture.md` ; revue de la Forge, F5 et F6 |
 
 ## Écarts avec la fiche de cadrage
 
@@ -50,14 +50,14 @@ chat »). Les tests de l'API sont dans `src/bootstrap/forge-api.test.ts`.
 
 | Indicateur | À l'étiquette `td11-fin` | Au rendu |
 | --- | --- | --- |
-| Nombre de tests | 232, dans 33 fichiers | 289, dans 37 fichiers |
-| Couverture des lignes | 75 % | 66,18 % |
+| Nombre de tests | 232, dans 33 fichiers | 295, dans 37 fichiers |
+| Couverture des lignes | 75 % | 64.33 % |
 | Violations des règles d'architecture | 0 | 0 |
 
 La couverture baisse alors que les tests augmentent. La mesure porte sur tout `src/`, y compris
 le code d'interface, qu'aucun test ne charge. Entre les deux mesures, l'habillage graphique
 (`src/ui/art/`, environ 6 000 lignes de composants client) et l'interface de la Forge ont été
-ajoutés sans test automatique. Le code serveur de la Forge est couvert par 33 tests du domaine
+ajoutés sans test automatique. Le code serveur de la Forge est couvert par 38 tests du domaine
 et par les tests de l'API (voir le bilan technique, section 3).
 
 ## Usage de l'IA générative

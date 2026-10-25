@@ -1,6 +1,6 @@
 # ADR-0011 - Paiement des fabrications par une saga orchestrée par la Forge, échangée avec le Village par messages
 
-- Statut : accepté
+- Statut : accepté, complété par l'ADR 0014 (délai de réponse et remboursement tardif)
 - Date : 2026-10-25
 
 ## Contexte

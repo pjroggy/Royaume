@@ -5,6 +5,7 @@ import {
   FUR_COLORS,
   INVENTORY_MAX,
   MAX_FORGE_LEVEL,
+  PAYMENT_TIMEOUT_MS,
   RECIPES,
   upgradeCost,
 } from './catalog'
@@ -375,5 +376,63 @@ describe('Règle 12 - allure du chat', () => {
       },
     })
     expect(JSON.stringify(cat)).not.toContain('Secret')
+  })
+})
+
+describe('Règle 13 - paiement sans réponse', () => {
+  const due = T0 + PAYMENT_TIMEOUT_MS
+  const cost = RECIPES.hornedHelm.cost
+  const cancel: ForgeCommand = { type: 'CancelOrder' }
+  // Le Village n'a pas répondu, et le délai est passé : le joueur abandonne le travail.
+  const abandoned = play(paying, cancel, due)
+
+  it("refuse l'abandon d'un paiement avant la fin du délai de réponse", () => {
+    expect(decide(paying, cancel, due - 1)).toEqual({
+      ok: false,
+      error: { code: 'NOT_CANCELLABLE' },
+    })
+    expect(toView(paying, due - 1).current).toMatchObject({ paymentDueAt: due, abandonable: false })
+    expect(toView(paying, due).current).toMatchObject({ abandonable: true })
+  })
+
+  it('libère la forge après le délai, sans rien rembourser tant que le Village ne répond pas', () => {
+    expect(abandoned.events).toEqual([{ type: 'PaymentAbandoned', data: { no: 1, cost, at: due } }])
+    expect(abandoned.requests).toEqual([])
+    expect(abandoned.state.current).toBeNull()
+    // Une nouvelle commande est de nouveau possible (règle 2).
+    expect(decide(abandoned.state, order(), due).ok).toBe(true)
+  })
+
+  it("rembourse une seule fois un prélèvement confirmé après l'abandon du travail", () => {
+    const late = play(abandoned.state, reply(1, 'withdrawn'), due + 60_000)
+    expect(late.events).toEqual([
+      { type: 'LatePaymentRefunded', data: { no: 1, refund: cost, at: due + 60_000 } },
+    ])
+    expect(late.requests).toEqual([
+      {
+        kind: 'deposit',
+        transferId: transferIdOf(ALICE, 1, 'refund'),
+        playerId: ALICE,
+        resources: cost,
+      },
+    ])
+    // La même réponse, livrée une seconde fois, n'a plus d'effet (règle 11).
+    expect(decide(late.state, reply(1, 'withdrawn'), due)).toEqual({ ok: true, events: [] })
+  })
+
+  it("n'applique pas une réponse tardive au travail commandé ensuite", () => {
+    const next = play(abandoned.state, order('shadowHood'), due).state
+    // Refus tardif du travail abandonné : rien n'est enregistré, le nouveau travail attend.
+    expect(decide(next, reply(1, 'refused', { wood: 5 }), due)).toEqual({ ok: true, events: [] })
+    // Confirmation tardive du travail abandonné : remboursement, sans toucher au nouveau.
+    const late = play(next, reply(1, 'withdrawn'), due)
+    expect(late.events.map((e) => e.type)).toEqual(['LatePaymentRefunded'])
+    expect(late.state.current).toMatchObject({ no: 2, status: 'paying' })
+  })
+
+  it("permet aussi d'abandonner une amélioration restée sans réponse", () => {
+    const upgrading = play(initialState, { type: 'UpgradeForge' }).state
+    const { events } = play(upgrading, cancel, due)
+    expect(events.map((e) => e.type)).toEqual(['PaymentAbandoned'])
   })
 })

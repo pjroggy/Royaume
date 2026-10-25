@@ -195,8 +195,13 @@ export function ForgeScreen({ userId }: { userId: string }) {
 
   // ÉCHÉANCE : la fin de la fabrication est constatée à la lecture. Le compte à rebours relit
   // la forge à l'échéance ; la vue présente alors l'objet comme prêt, et l'échéance disparaît.
-  const forging = view?.current?.status === 'forging' ? view.current.readyAt : null
-  const remaining = useCountdown(forging, refresh)
+  // Le même compte à rebours sert au délai de réponse du Village, pour un travail en attente
+  // de paiement (règle 13) : à son terme, la forge est relue et propose l'abandon.
+  const job = view?.current
+  let deadline: number | null = null
+  if (job?.status === 'forging') deadline = job.readyAt
+  else if (job?.status === 'paying' && !job.abandonable) deadline = job.paymentDueAt
+  const remaining = useCountdown(deadline, refresh)
 
   /** Applique la réponse d'une commande ; vrai si elle a réussi. */
   async function handle(res: Response) {
@@ -336,6 +341,23 @@ function WorkPanel({
       <div className="panel">
         <p className="kicker">Sur l'enclume</p>
         <p>Le Village prépare le paiement...</p>
+        {current.abandonable ? (
+          <>
+            <p className="muted">
+              Le Village ne répond pas. Vous pouvez abandonner la commande : si le paiement est
+              confirmé plus tard, il vous sera remboursé.
+            </p>
+            <button type="button" className="wide secondary" onClick={onCancel}>
+              Abandonner la commande
+            </button>
+          </>
+        ) : (
+          remaining !== null && (
+            <p className="muted">
+              Sans réponse dans {duration(remaining * 1000)}, vous pourrez abandonner la commande.
+            </p>
+          )
+        )}
       </div>
     )
   }
