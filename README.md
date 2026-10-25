@@ -77,6 +77,7 @@ Un module n'est accessible depuis l'extérieur que par ses entrées publiques : 
 | --- | --- | --- |
 | `system` | Route de santé | `/api/system` |
 | `realm` | Village : fondation, production de ressources, amélioration des bâtiments | `/api/realm` |
+| `forge` | Forge : fabrication d'équipement payée par le Village (saga), inventaire, gravures, allure et équipement du chat du joueur | `/api/forge` |
 | `dungeon` | Donjon : expéditions de un à quatre héros, compagnons pilotés par l'ordinateur, deux niveaux de difficulté, combats en manches simultanées | `/api/dungeon` |
 | `ranking` | Classement des joueurs, construit à partir des événements du Village et du Donjon | `/api/ranking` |
 | `market` | Marché : échanges de ressources entre joueurs, par une saga orchestrée | `/api/market` |
@@ -88,7 +89,9 @@ L'apparence du jeu (un royaume de chats en dark fantasy) est entièrement porté
 d'interface ; les identifiants du domaine (`wood`, `stone`, `gold`, `goblin`...) ne changent pas
 (ADR 0002).
 
-- `src/ui/theme.ts` donne le libellé et le symbole de chaque entité du jeu.
+- `src/ui/theme.ts` donne le libellé et l'icône de chaque entité du jeu. Les icônes viennent de
+  Game-icons.net, par le paquet `react-icons`, sous licence CC BY 3.0
+  ([crédits](docs/credits.md), ADR 0013).
 - `src/ui/art/` contient les décors dessinés en SVG (carte du Village, crypte, taverne, marché,
   salle du Classement), le chat `CatAvatar` et ses emplacements d'équipement, les monstres et
   les effets joués après une action du joueur. Ces composants n'ont aucune logique : chaque
@@ -98,13 +101,20 @@ d'interface ; les identifiants du domaine (`wood`, `stone`, `gold`, `goblin`...)
   (`prefers-reduced-motion`).
 - Le choix entre crépuscule, nuit et thème du système est conservé dans un cookie, lu au
   rendu sur le serveur.
+- Le chat qui représente chaque joueur (allure choisie sur la page « Mon chat », ouverte depuis
+  le château, et équipement porté) est tenu par la Forge. La Taverne, le Donjon et le
+  Classement le dessinent avec `PlayerCat` et `useCats`, exportés par `src/modules/forge/ui.tsx`
+  (ADR 0012).
+- Le guide du jeu (`src/ui/guide.tsx`) s'ouvre à la première visite, puis depuis le bouton
+  « Guide » de la navigation. Le fait qu'il a été vu est retenu par le navigateur.
 
 ## Temps réel
 
 Les changements sont diffusés aux navigateurs par des Server-Sent Events, à l'adresse
 `/api/stream/<canal>`. Chaque canal n'est accessible qu'aux joueurs connectés autorisés par
 la règle du module concerné. Le canal `village-<joueur>` n'est ainsi accessible qu'au
-propriétaire du village, et le canal `dungeon-<expédition>` aux seuls membres de l'expédition.
+propriétaire du village, le canal `forge-<joueur>` au seul propriétaire de la forge, et le canal
+`dungeon-<expédition>` aux seuls membres de l'expédition.
 
 La plupart des canaux correspondent à un flux du journal d'événements. Les canaux `ranking`
 et `market` sont des canaux globaux : ils suivent, dans tout le journal, les événements qui
@@ -124,11 +134,12 @@ raccourcir cette durée pour observer la reconnexion.
 
 ## Échanges entre modules
 
-Une opération qui modifie les données de plusieurs modules, comme un échange du Marché, est
+Une opération qui modifie les données de plusieurs modules, comme un échange du Marché ou le
+paiement d'une fabrication de la Forge (ADR 0011), est
 une saga (ADR 0007) : chaque étape est une transaction locale à un module, et les modules
 communiquent par des messages enregistrés dans la boîte d'envoi (`platform.outbox`), dans la
 même transaction que leurs événements. Les messages sont distribués après chaque commande et
-chaque consultation du Marché, et chaque jour par la tâche planifiée `/api/cron/daily`. Leur livraison
+chaque consultation du Marché et de la Forge, et chaque jour par la tâche planifiée `/api/cron/daily`. Leur livraison
 est garantie au moins une fois : les gestionnaires de messages sont idempotents. Un message qui
 échoue dix fois est abandonné : la tâche quotidienne le signale, et le script
 `scripts/dead-letters.ts` permet de l'examiner, puis de le relancer une fois sa cause corrigée.
@@ -157,6 +168,10 @@ page « Mes données » :
 - supprimer son compte (`DELETE /api/account`) : ses données sont supprimées des tables de
   tous les modules, et son nom est remplacé par une mention neutre dans le journal
   d'événements (ADR 0008). Chaque effacement est consigné dans `platform.erasures`.
+
+La Forge exporte le niveau de la forge, l'inventaire, l'équipement, les gravures et l'allure
+du chat. À la suppression du compte, le texte des gravures est remplacé par « Gravure effacée »
+dans le journal.
 
 Les messages de la Taverne sont conservés trente jours, et la présence d'un joueur deux
 minutes après son dernier signal. Ces durées sont appliquées à chaque lecture, et chaque jour
@@ -205,9 +220,12 @@ sans la première ; sans la seconde, la route des tâches quotidiennes reste fer
 - [Revue de sécurité de l'authentification](docs/qualite/revue-securite-authentification.md)
 - [Revue de sécurité du Donjon](docs/qualite/revue-securite-donjon.md)
 - [Revue de sécurité du Marché](docs/qualite/revue-securite-marche.md)
+- [Revue de sécurité de la Forge](docs/qualite/revue-securite-forge.md)
 - [Registre des traitements](docs/rgpd/registre-traitements.md)
 - [Revue de conformité au RGPD](docs/rgpd/revue-conformite.md)
 - [Bilan technique](docs/bilan-technique.md)
+- [Fiche de cadrage et rendu de l'évaluation](docs/evaluation/rendu.md)
+- [Crédits](docs/credits.md)
 
 ## Conventions
 
@@ -246,3 +264,11 @@ Les décors sont des composants client : leur dessin s'ajoute au code envoyé au
 (DT-014). Les personnages et les repères sont placés en pourcentage du décor : sur un écran
 étroit, le panneau passe sous le décor, mais les repères peuvent se chevaucher. L'interface
 n'est couverte par aucun test automatique.
+
+Une fabrication de la Forge dont le message de prélèvement est abandonné reste en attente de
+paiement : la forge refuse alors toute commande, jusqu'à la relance du message par
+`scripts/dead-letters.ts` (ADR 0011). Chaque lecture d'une forge rejoue tout son flux, sans
+instantané, et `GET /api/forge/cats` en rejoue jusqu'à vingt (ADR 0010). Les chats des
+joueurs sont lus par le navigateur après le chargement de chaque écran : ils apparaissent un
+instant après la scène. Les bonus de l'équipement ne sont pas encore appliqués aux combats du
+Donjon (ADR 0012).

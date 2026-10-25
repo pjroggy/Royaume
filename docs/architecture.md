@@ -12,7 +12,7 @@ dans le même commit que la modification qu'ils décrivent.
 ```mermaid
 flowchart TB
   joueur["Joueur<br/>[Personne]<br/>Joue depuis un navigateur,<br/>sur ordinateur ou sur téléphone"]
-  royaumes["Royaumes<br/>[Système logiciel]<br/>Jeu web multijoueur : village, donjon,<br/>classement, marché et taverne"]
+  royaumes["Royaumes<br/>[Système logiciel]<br/>Jeu web multijoueur : village, forge, donjon,<br/>classement, marché et taverne"]
   joueur -->|"Gère son village, joue avec les autres joueurs,<br/>reçoit les changements en direct (HTTPS)"| royaumes
 ```
 
@@ -42,7 +42,9 @@ flowchart TB
 | Application serveur | Next.js, Hono, Better Auth, Drizzle | Contrôle d'accès, règles du jeu, enregistrement des événements, diffusion des flux |
 | Base de données | PostgreSQL (Neon en production, PGlite en local et en test) | Conservation du journal d'événements, des comptes et des sessions ; modèles de lecture des modules |
 
-Le journal d'événements est la seule source de vérité des modules Village, Donjon et Marché.
+Le journal d'événements est la seule source de vérité des modules Village, Forge, Donjon et
+Marché. La Forge n'a pas de schéma propre : ses flux (`forge-<joueur>`) sont dans
+`platform.events`, et ses messages dans `platform.outbox` (ADR 0010).
 La Taverne n'enregistre pas d'événements : ses tables sont sa propre source de vérité (ADR 0008).
 Les tables des schémas `ranking`, `dungeon` et `market` sont des modèles de lecture, dérivés du journal par des projections : elles peuvent
 être vidées puis reconstruites à tout moment, sans perte d'information.
@@ -63,6 +65,7 @@ flowchart TB
   subgraph modules["src/modules"]
     system["system<br/>Route de santé"]
     realm["realm<br/>Village : domaine, service,<br/>dépôt fondé sur le journal, API, canal,<br/>version distante (remote.ts)"]
+    forge["forge<br/>Forge : domaine, orchestrateur de la saga<br/>de paiement, dépôt fondé sur le journal,<br/>API, canal du propriétaire"]
     dungeon["dungeon<br/>Donjon : domaine et IA, service,<br/>dépôt fondé sur le journal, API, canal discret,<br/>projection des expéditions ouvertes"]
     ranking["ranking<br/>Classement : projection,<br/>lecture, API, canal global"]
     market["market<br/>Marché : orchestrateur de la saga,<br/>projection des offres, API, canal global"]
@@ -83,13 +86,14 @@ flowchart TB
   route --> server
   pages --> server
   server --> createapi
-  createapi --> system & realm & dungeon & ranking & market & tavern & auth & http & realtime & projection & outbox & privacy & cron
+  createapi --> system & realm & forge & dungeon & ranking & market & tavern & auth & http & realtime & projection & outbox & privacy & cron
   realm --> store & realtime & http & outbox
+  forge --> store & realtime & http & outbox
   market --> store & projection & realtime & http & outbox
   dungeon --> store & projection & realtime & http
   ranking --> projection & realtime & http
   tavern --> realtime & http & db
-  realm & dungeon & market & ranking & tavern --> privacy
+  realm & forge & dungeon & market & ranking & tavern --> privacy
   privacy --> store
   auth --> privacy
   realtime --> store & http
@@ -117,6 +121,15 @@ La seule dépendance directe porte sur les contrats du Village (`REALM_TOPICS`, 
 qui décrivent ces messages. Chaque transaction ne modifie que les données d'un seul module,
 et la boîte d'envoi (ADR 0007).
 
+La Forge suit le même principe pour payer ses fabrications (ADR 0011). Elle orchestre une
+saga avec le Village : elle demande un prélèvement par `realm.withdraw`, avec l'adresse de
+réponse `forge.transfer-result`, et rembourse une fabrication annulée par `realm.deposit`.
+Elle n'importe du Village que ses contrats (`REALM_TOPICS`). Le Village n'a pas été modifié :
+son langage publié acceptait déjà ces deux sujets. Les identifiants des mouvements,
+construits par la Forge (`forge:<joueur>:<travail>:pay|refund`), rendent les échanges
+idempotents des deux côtés. La garantie est une livraison au moins une fois, avec une
+cohérence différée : entre la commande et la réponse du Village, la forge attend son paiement.
+
 Chaque module déclare ses données personnelles à la brique `privacy`, au moyen d'un fichier
 `personal-data.ts` : il les exporte, désigne les champs personnels de ses événements, et les
 efface de ses tables. La brique `privacy` contient la seule fonction du projet qui modifie un
@@ -140,6 +153,80 @@ de la plateforme ou d'un module, et chaque module qui conserve des données déc
 données personnelles.
 
 Seule la racine de composition connaît à la fois la plateforme et l'ensemble des modules.
+
+## Composants de l'interface : le chat du joueur
+
+Le chat qui représente un joueur (son allure et l'équipement qu'il porte) est tenu par la
+Forge, mais il est dessiné dans quatre modules. Ceux-ci l'obtiennent par **composition
+d'interface** : ils importent le hook `useCats` et le composant `PlayerCat` de l'entrée
+publique `src/modules/forge/ui.tsx`, qui lisent `GET /api/forge/cats`. Leur code serveur ne
+dépend pas de la Forge (ADR 0012).
+
+```mermaid
+flowchart LR
+  subgraph navigateur["Interface web (navigateur)"]
+    realmui["realm/ui.tsx<br/>Carte du Village"]
+    avatar["Page « Mon chat »<br/>app/(jeu)/avatar"]
+    forgeui["forge/ui.tsx<br/>ForgeScreen, AvatarScreen,<br/>useCats, PlayerCat"]
+    tavernui["tavern/ui.tsx<br/>Tables de la Taverne"]
+    dungeonui["dungeon/ui.tsx<br/>Entrée et combats"]
+    rankingui["ranking/ui.tsx<br/>Podium"]
+  end
+  api["Application serveur<br/>/api/forge"]
+  realmui -->|"lien du château"| avatar
+  avatar --> forgeui
+  tavernui & dungeonui & rankingui -->|"useCats, PlayerCat"| forgeui
+  forgeui -->|"GET /cats?ids=…, POST /look,<br/>commandes de la forge"| api
+```
+
+La vue publique d'un chat (`PublicCat`) ne contient que l'allure et, pour chaque
+emplacement, la recette et la qualité de l'objet porté. Les gravures, qui sont des données
+personnelles, n'en font jamais partie.
+
+## Parcours d'une commande de la Forge
+
+Une commande traverse deux modules. Dans le cas ordinaire, la saga progresse jusqu'à la
+fabrication pendant la requête du joueur : la distribution de la boîte d'envoi remet le
+prélèvement au Village, puis sa réponse à la Forge.
+
+```mermaid
+sequenceDiagram
+  actor J as Joueur
+  participant F as API et service Forge
+  participant E as Journal et boîte d'envoi
+  participant D as Distributeur
+  participant V as Village
+
+  J->>F: POST /api/forge/orders (recette)
+  F->>E: ItemOrdered + message realm.withdraw (une transaction)
+  F->>D: distribuer la boîte d'envoi
+  D->>V: realm.withdraw (forge:joueur:1:pay)
+  alt stock suffisant
+    V->>E: ResourcesWithdrawn + réponse withdrawn (une transaction)
+  else stock insuffisant
+    V->>E: WithdrawalRefused + réponse refused et quantités manquantes
+  end
+  D->>F: forge.transfer-result
+  F->>E: PaymentConfirmed (readyAt) ou PaymentRefused
+  F-->>J: vue de la forge (en fabrication, ou paiement refusé)
+  Note over J,F: L'échéance est calculée à la lecture (ADR 0010) : aucune tâche de fond.
+  alt retrait, après readyAt
+    J->>F: POST /api/forge/collect
+    F->>E: ItemCollected
+    F-->>J: objet dans l'inventaire
+  else annulation pendant la fabrication (compensation)
+    J->>F: POST /api/forge/orders/cancel
+    F->>E: OrderCancelled + message realm.deposit (forge:joueur:1:refund)
+    D->>V: realm.deposit
+    V->>E: ResourcesDeposited
+    F-->>J: forge libre, village remboursé
+  end
+```
+
+Si la réponse du Village est livrée deux fois, la seconde ne correspond plus au travail en
+attente de paiement : la Forge l'ignore (règle 11). Si la distribution échoue, la saga reprend
+à la requête suivante qui distribue la boîte d'envoi, ou au plus tard lors de la tâche
+quotidienne.
 
 ## Extraction du Village
 
