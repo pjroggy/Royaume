@@ -81,6 +81,12 @@ const PLACES = {
     pin: 'Taverne',
     text: 'Discutez au coin du feu avec les joueurs présents.',
   },
+  forge: {
+    left: '60%',
+    top: '75%',
+    pin: 'Forge',
+    text: "Fabriquez l'équipement de votre chat, et améliorez la forge.",
+  },
 } as const
 type Place = keyof typeof PLACES
 
@@ -89,6 +95,7 @@ const LINKS: Partial<Record<Place, { href: string; verb: string }>> = {
   dungeon: { href: '/dungeon', verb: 'Entrer dans la crypte' },
   market: { href: '/market', verb: 'Aller au marché' },
   tavern: { href: '/tavern', verb: 'Pousser la porte' },
+  forge: { href: '/forge', verb: 'Entrer dans la forge' },
 }
 
 const isBuilding = (place: Place): place is Building =>

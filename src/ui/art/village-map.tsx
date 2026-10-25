@@ -987,6 +987,57 @@ export function VillageBackdrop({
         </g>
       </g>
 
+      {/* Forge du village : murs de pierre, cheminée fumante et feu visible par la porte */}
+      <g>
+        <circle className="flicker" cx="1036" cy="520" r="70" fill="url(#m-lamp)" />
+        <ellipse
+          cx="1036"
+          cy="540"
+          rx="62"
+          ry="8"
+          fill="#000"
+          opacity="0.5"
+          filter="url(#m-soft)"
+        />
+        <path
+          d="M996 538 L 996 500 L 1076 500 L 1076 538 Z"
+          fill="url(#m-stoneSide)"
+          stroke="#1a1420"
+          strokeWidth="2.5"
+        />
+        <path d="M996 538 L 996 500 L 1076 500 L 1076 538 Z" fill="url(#m-bricks)" />
+        <path
+          d="M988 504 L 1012 476 L 1062 476 L 1084 504 Z"
+          fill="#3a2a2a"
+          stroke="#140c0c"
+          strokeWidth="2.5"
+        />
+        <path d="M988 504 L 1012 476 L 1062 476 L 1084 504 Z" fill="url(#m-tiles)" />
+        <path
+          d="M1056 486 L 1056 456 L 1070 456 L 1070 494 Z"
+          fill="url(#m-stoneSide)"
+          stroke="#1a1420"
+          strokeWidth="2"
+        />
+        <g className="smokewind" fill="#8a8494" opacity="0.5">
+          <circle cx="1063" cy="448" r="5" />
+          <circle cx="1067" cy="436" r="7" style={{ animationDelay: '0.9s' }} />
+        </g>
+        <path
+          d="M1012 538 L 1012 516 C 1012 506, 1032 506, 1032 516 L 1032 538 Z"
+          fill="#ff8a2a"
+          className="flicker"
+        />
+        <path d="M1016 538 C 1018 528, 1026 528, 1028 538 Z" fill="#fff0b0" className="flicker" />
+        <rect x="1046" y="512" width="16" height="12" rx="2" fill="#ffb84d" className="flicker" />
+        <path
+          d="M1084 536 L 1086 528 H 1104 C 1108 528, 1110 530, 1112 532 L 1104 533 L 1102 536 Z"
+          fill="url(#m-metal)"
+          stroke="#1a1420"
+          strokeWidth="1.2"
+        />
+      </g>
+
       {/* Ferme laitière */}
       <g className={popClass.quarry}>
         <ellipse
