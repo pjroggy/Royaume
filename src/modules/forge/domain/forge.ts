@@ -327,7 +327,7 @@ function recordTransferResult(
   now: number,
 ): Decision {
   const job = state.current
-  if (!job || job.status !== 'paying') return accept()
+  if (job?.status !== 'paying') return accept()
   if (!result.transferId.endsWith(`:${job.no}:pay`)) return accept()
 
   // Règle 4 : paiement refusé, le travail est abandonné ; rien n'a été prélevé.

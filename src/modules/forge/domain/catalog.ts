@@ -116,15 +116,11 @@ export function bonusOf(recipe: RecipeId, quality: Quality) {
 }
 
 /** Coût de base de l'amélioration de la forge, multiplié à chaque niveau (règle 9). */
-export const UPGRADE_BASE_COST = { wood: 150, stone: 100, gold: 10 } satisfies Amounts
+export const UPGRADE_BASE_COST = { wood: 150, stone: 100 } satisfies Amounts
 export const UPGRADE_GROWTH = 2
 
 /** Coût de l'amélioration qui fait passer la forge du niveau donné au suivant. */
 export function upgradeCost(level: number): Amounts {
   const factor = UPGRADE_GROWTH ** (level - START_LEVEL)
-  return {
-    wood: UPGRADE_BASE_COST.wood * factor,
-    stone: UPGRADE_BASE_COST.stone * factor,
-    gold: UPGRADE_BASE_COST.gold * factor,
-  }
+  return { wood: UPGRADE_BASE_COST.wood * factor, stone: UPGRADE_BASE_COST.stone * factor }
 }
