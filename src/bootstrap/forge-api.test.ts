@@ -175,6 +175,24 @@ describe('API du module Forge - fabrication, retrait, équipement et gravure', (
   })
 })
 
+describe('Forge - canal temps réel', () => {
+  it('autorise un joueur à écouter le canal de sa forge, qui transmet ses événements', async () => {
+    const api = await forgeWithVillages()
+    await order(api)
+    const res = await api.get('/api/stream/forge-alice')
+
+    expect(res.status).toBe(200)
+    const text = await res.text()
+    expect(text).toContain('"type":"ItemOrdered"')
+    expect(text).toContain('"type":"PaymentConfirmed"')
+  })
+
+  it("refuse l'écoute de la forge d'un autre joueur (403)", async () => {
+    const api = await forgeWithVillages()
+    expect((await api.get('/api/stream/forge-bob', 'alice')).status).toBe(403)
+  })
+})
+
 describe('Forge - droits des joueurs', () => {
   it('exporte la forge du joueur, et efface ses gravures avec son compte', async () => {
     const api = await forgeWithVillages()
