@@ -7,10 +7,12 @@
 
 ## L'idée
 
-À la Forge, le joueur fabrique l'équipement de son chat chevalier : casque, armure, arme et
+Au château de son village, le joueur crée l'avatar qui le représente dans le royaume : un chat
+chevalier ou un chaton écuyer, dont il choisit le pelage et le regard. À la Forge, il fabrique l'équipement de ce chat : casque, armure, arme et
 cape. Chaque recette coûte des ressources de son village (poisson, lait, herbe à chat) et
 demande un temps de fabrication. Une fois l'objet retiré de la forge, le joueur peut y graver
-un nom, puis l'équiper : son chat le porte alors sur tous les écrans du jeu.
+un nom, puis l'équiper : son chat le porte alors dans la Forge, dans la Taverne et dans le Donjon,
+où les autres joueurs le voient tel qu'il l'a équipé.
 
 La forge est un bâtiment du royaume, visible sur la carte du Village, que le joueur améliore
 comme les autres, de 1 à 5. Plus la forge est haute, meilleure est la qualité des objets qui en
@@ -50,6 +52,9 @@ progression du joueur, et prépare l'apport de bonus de combat au Donjon (bonus 
 11. **Réponses du Village idempotentes.** Une réponse du Village déjà prise en compte (même
    identifiant de mouvement) n'a aucun effet : un message livré deux fois ne paie ni ne
    rembourse deux fois.
+12. **Allure du chat.** Le joueur choisit une silhouette (chat ou chaton), un pelage et une
+    couleur d'yeux, uniquement parmi ceux que propose le jeu (`INVALID_LOOK` sinon). Les autres
+    joueurs voient son allure et l'équipement qu'il porte, mais jamais ses gravures.
 
 ## Les commandes et les lectures
 
@@ -63,6 +68,8 @@ progression du joueur, et prépare l'apport de bonus de combat au Donjon (bonus 
 | Équiper un objet | Commande `EquipItem` | `POST /api/forge/equip` |
 | Vider un emplacement | Commande `UnequipSlot` | `POST /api/forge/unequip` |
 | Graver un nom sur un objet | Commande `EngraveItem` | `POST /api/forge/engrave` |
+| Choisir l'allure de son chat (page « Mon chat », depuis le château) | Commande `CustomizeCat` | `POST /api/forge/look` |
+| Voir les chats des autres joueurs (Taverne, Donjon) | Lecture | `GET /api/forge/cats?ids=…` |
 | Réponse du Village à un prélèvement | Message `forge.transfer-result` | Boîte d'envoi |
 
 Toutes les routes sont réservées aux joueurs connectés, et n'agissent que sur la forge du
@@ -99,6 +106,11 @@ données ne sont pas destinées à disparaître rapidement, à la différence de
 - **Donjon** (bonus visé), par **lecture du langage publié** de la Forge : à l'arrivée d'un héros
   dans une expédition, le Donjon lit les bonus de l'équipement porté. Le Donjon passerait par
   `src/modules/forge/contracts.ts` et `index.ts`, sans importer de fichier interne.
+
+- **Taverne et Donjon**, par **composition d'interface** : leurs écrans dessinent les joueurs
+  avec le composant `PlayerCat` et le hook `useCats`, exportés par l'entrée publique `ui.tsx`
+  de la Forge, qui lisent `GET /api/forge/cats`. Ces modules ne connaissent ni le domaine ni
+  le stockage de la Forge ; leur propre code serveur n'est pas modifié.
 
 ## Les données personnelles
 

@@ -2,10 +2,10 @@ import { REALM_TOPICS } from '@/modules/realm/contracts'
 import { withOptimisticRetry } from '@/platform/event-store/retry'
 import type { NewMessage } from '@/platform/outbox/outbox'
 import { FORGE_TOPICS } from '../contracts'
-import type { Slot } from '../domain/catalog'
+import type { CatLook, Slot } from '../domain/catalog'
 import { decide, type ForgeCommand, type ForgeError, type ForgeEvent } from '../domain/forge'
 import { requestsFor, type SagaRequest } from '../domain/saga'
-import { type ForgeView, toView } from '../domain/view'
+import { type ForgeView, type PublicCat, toPublicCat, toView } from '../domain/view'
 import type { ForgeRepository } from './forge-repository'
 
 /** Résultat d'une commande du joueur : la vue de sa forge, ou l'erreur métier. */
@@ -97,8 +97,20 @@ export function createForgeService(
     if (!decision.ok) throw new Error(`Forge de ${playerId} : ${decision.error.code}`)
   }
 
+  /**
+   * Chats des joueurs désignés, tels que les voient les autres joueurs : allure et équipement
+   * porté. C'est la lecture que proposent la Taverne et le Donjon pour dessiner les joueurs.
+   */
+  async function cats(playerIds: string[]) {
+    const entries = await Promise.all(
+      playerIds.map(async (id) => [id, toPublicCat((await repo.load(id)).state)] as const),
+    )
+    return Object.fromEntries(entries) as Record<string, PublicCat>
+  }
+
   return {
     getView,
+    cats,
     step,
     /** Vue sans distribution de la boîte d'envoi, pour l'export des données personnelles. */
     peek: view,
@@ -110,6 +122,8 @@ export function createForgeService(
     unequip: (playerId: string, slot: Slot) => execute(playerId, { type: 'UnequipSlot', slot }),
     engrave: (playerId: string, itemId: string, text: string) =>
       execute(playerId, { type: 'EngraveItem', itemId, text }),
+    customize: (playerId: string, look: CatLook) =>
+      execute(playerId, { type: 'CustomizeCat', look }),
   }
 }
 

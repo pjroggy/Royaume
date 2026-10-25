@@ -175,6 +175,50 @@ describe('API du module Forge - fabrication, retrait, équipement et gravure', (
   })
 })
 
+describe('API du module Forge - allure du chat et lecture par les autres modules', () => {
+  const look = { kind: 'kitten', fur: '#efdcb8', eyes: '#7cc8ff' }
+
+  it("enregistre l'allure choisie, et refuse une couleur qui n'est pas proposée (400)", async () => {
+    const api = await forgeWithVillages()
+    const view = await viewOf(await api.post('/api/forge/look', look))
+    expect(view.look).toEqual(look)
+    expect((await api.post('/api/forge/look', { ...look, fur: '#00ff00' })).status).toBe(400)
+  })
+
+  it("présente l'allure et l'équipement des joueurs demandés, sans leurs gravures", async () => {
+    const api = await forgeWithVillages()
+    await api.post('/api/forge/look', look)
+    await aliceHasAHelm(api)
+    await api.post('/api/forge/equip', { itemId: 'item-1' })
+    await api.post('/api/forge/engrave', { itemId: 'item-1', text: 'Secret' })
+
+    // Bob, assis à la même table de la Taverne, demande à voir les chats présents.
+    const res = await api.get('/api/forge/cats?ids=alice,bob', 'bob')
+    expect(res.status).toBe(200)
+    const { cats } = await res.json()
+    expect(cats.alice).toEqual({
+      look,
+      gear: {
+        helmet: { recipe: 'hornedHelm', quality: 'common' },
+        armor: null,
+        weapon: null,
+        cape: null,
+      },
+    })
+    // Bob n'a rien choisi : l'interface lui donne l'allure par défaut.
+    expect(cats.bob.look).toBeNull()
+    expect(JSON.stringify(cats)).not.toContain('Secret')
+  })
+
+  it('refuse une lecture sans identifiant, ou de plus de vingt chats (400)', async () => {
+    const api = await forgeWithVillages()
+    expect((await api.get('/api/forge/cats')).status).toBe(400)
+    const many = Array.from({ length: 21 }, (_, i) => `p${i}`).join(',')
+    expect((await api.get(`/api/forge/cats?ids=${many}`)).status).toBe(400)
+    expect((await api.get('/api/forge/cats?ids=alice', null)).status).toBe(401)
+  })
+})
+
 describe('Forge - canal temps réel', () => {
   it('autorise un joueur à écouter le canal de sa forge, qui transmet ses événements', async () => {
     const api = await forgeWithVillages()

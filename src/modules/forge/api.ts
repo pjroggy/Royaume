@@ -3,6 +3,8 @@ import type { AppEnv } from '@/platform/http/types'
 import { validateJson } from '@/platform/http/validate'
 import type { ForgeService } from './application/forge-service'
 import {
+  CatsQuery,
+  CustomizeCatInput,
   EngraveItemInput,
   EquipItemInput,
   type ForgeError,
@@ -21,6 +23,7 @@ const STATUS: Record<ForgeError['code'], 400 | 404 | 409> = {
   NOT_CANCELLABLE: 409,
   NOT_IN_INVENTORY: 404,
   INVALID_ENGRAVING: 400,
+  INVALID_LOOK: 400,
 }
 
 /**
@@ -89,6 +92,25 @@ export function createForgeApi(service: ForgeService) {
         return result.ok
           ? c.json({ view: result.view })
           : c.json({ error: result.error }, STATUS[result.error.code])
+      })
+
+      // Allure du chat du joueur.
+      .post('/look', validateJson(CustomizeCatInput), async (c) => {
+        const result = await service.customize(c.var.userId, c.req.valid('json'))
+        return result.ok
+          ? c.json({ view: result.view })
+          : c.json({ error: result.error }, STATUS[result.error.code])
+      })
+
+      // Chats d'autres joueurs (allure et équipement porté), pour les dessiner dans la Taverne
+      // ou le Donjon. Aucune donnée personnelle : ni gravure, ni inventaire, ni ressources.
+      .get('/cats', async (c) => {
+        const parsed = CatsQuery.safeParse({ ids: c.req.query('ids') ?? '' })
+        if (!parsed.success) {
+          const message = parsed.error.issues[0]?.message ?? 'Entrée invalide'
+          return c.json({ error: { code: 'INVALID_INPUT' as const, message } }, 400)
+        }
+        return c.json({ cats: await service.cats(parsed.data.ids) })
       })
   )
 }

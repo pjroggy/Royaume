@@ -33,12 +33,15 @@ export function hash(text: string): number {
 }
 
 /** Allure d'un chat déduite de l'identifiant d'un joueur : pelage, regard et cape. */
+/** Couleur du ventre assortie à un pelage : plus claire, ou grise sous un pelage sombre. */
+export const bellyFor = (fur: string) => (luminance(fur) < 0.3 ? '#4a4352' : shade(fur, 0.6))
+
 export function lookOf(id: string) {
   const h = hash(id)
   const fur = FURS[h % FURS.length]
   return {
     fur,
-    belly: luminance(fur) < 0.3 ? '#4a4352' : shade(fur, 0.6),
+    belly: bellyFor(fur),
     eyes: EYES[(h >>> 4) % EYES.length],
     capeColor: CAPES[(h >>> 8) % CAPES.length],
   }

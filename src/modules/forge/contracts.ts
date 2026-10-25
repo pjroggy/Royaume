@@ -4,19 +4,34 @@
  * des fonctions pures, sans aucun code propre au serveur.
  */
 import { z } from 'zod'
-import { ENGRAVING_MAX, SLOTS } from './domain/catalog'
+import { CAT_KINDS, ENGRAVING_MAX, EYE_COLORS, FUR_COLORS, SLOTS } from './domain/catalog'
 
-export type { Amounts, Quality, RecipeId, Slot } from './domain/catalog'
+export type {
+  Amounts,
+  CatKind,
+  CatLook,
+  EyeColor,
+  FurColor,
+  Quality,
+  RecipeId,
+  Slot,
+} from './domain/catalog'
+
 export {
+  CAT_KINDS,
   ENGRAVING_MAX,
+  EYE_COLORS,
+  FUR_COLORS,
   INVENTORY_MAX,
+  isEyeColor,
+  isFurColor,
   MAX_FORGE_LEVEL,
   QUALITIES,
   RECIPES,
   SLOTS,
 } from './domain/catalog'
 export type { ForgeError } from './domain/forge'
-export type { ForgeView, ItemView } from './domain/view'
+export type { ForgeView, ItemView, PublicCat } from './domain/view'
 
 /** Préfixe commun aux noms des flux, et des canaux, de toutes les forges. */
 export const FORGE_STREAM_PREFIX = 'forge-'
@@ -56,4 +71,25 @@ export const UnequipSlotInput = z.object({ slot: z.enum(SLOTS) })
 export const EngraveItemInput = z.object({
   itemId: z.string().min(1).max(40),
   text: z.string().max(ENGRAVING_MAX * 4),
+})
+
+/** Corps attendu pour choisir l'allure de son chat : uniquement des choix proposés par le jeu. */
+export const CustomizeCatInput = z.object({
+  kind: z.enum(CAT_KINDS),
+  fur: z.enum(FUR_COLORS),
+  eyes: z.enum(EYE_COLORS),
+})
+
+/** Nombre maximal de chats lus en une requête : une taverne, une expédition. */
+export const MAX_CATS_PER_READ = 20
+
+/**
+ * Paramètres attendus pour lire les chats d'autres joueurs : leurs identifiants, séparés par des
+ * virgules (« ?ids=alice,bob »), au plus MAX_CATS_PER_READ.
+ */
+export const CatsQuery = z.object({
+  ids: z
+    .string()
+    .transform((ids) => [...new Set(ids.split(',').filter(Boolean))])
+    .pipe(z.array(z.string().min(1).max(64)).min(1).max(MAX_CATS_PER_READ)),
 })

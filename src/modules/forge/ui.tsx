@@ -1,11 +1,13 @@
 'use client'
 import { hc } from 'hono/client'
+import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { useChannel } from '@/platform/realtime/use-channel'
-import { CatAvatar } from '@/ui/art/cat-avatar'
-import { lookOf } from '@/ui/art/color'
+import { CatAvatar, type CatAvatarProps } from '@/ui/art/cat-avatar'
+import { bellyFor, lookOf } from '@/ui/art/color'
 import { Burst, FloatText } from '@/ui/art/effects'
 import { ForgeBackdrop, HotMetal } from '@/ui/art/forge-room'
+import { HallBackdrop } from '@/ui/art/hall-of-heroes'
 import { at, Scene } from '@/ui/art/scene'
 import { useFlash } from '@/ui/art/use-flash'
 import { Entity } from '@/ui/entity'
@@ -14,11 +16,18 @@ import { useCountdown } from '@/ui/use-countdown'
 import type { ForgeApi } from './api'
 import {
   type Amounts,
+  CAT_KINDS,
+  type CatLook,
   ENGRAVING_MAX,
+  EYE_COLORS,
   type ForgeError,
   type ForgeView,
+  FUR_COLORS,
   forgeChannel,
   type ItemView,
+  isEyeColor,
+  isFurColor,
+  type PublicCat,
   SLOTS,
   type Slot,
 } from './contracts'
@@ -41,6 +50,7 @@ const ERRORS: Record<ApiError['code'], string> = {
   NOT_CANCELLABLE: 'Cette commande ne peut plus être annulée.',
   NOT_IN_INVENTORY: "Cet objet n'est pas dans votre inventaire.",
   INVALID_ENGRAVING: `La gravure compte de 1 à ${ENGRAVING_MAX} caractères.`,
+  INVALID_LOOK: "Cette allure n'est pas proposée par le jeu.",
 }
 
 /** Libellé affiché pour chaque état de la connexion temps réel. */
@@ -52,6 +62,84 @@ const STATUS_LABELS = {
 
 /** Couleur de cape de chaque recette de cape, pour le chat équipé. */
 const CAPE_COLORS: Record<string, string> = { midnightCape: '#24324a', catnipCape: '#2f6a2a' }
+
+// ---------------------------------------------------------------------------
+// Le chat d'un joueur, tel que les autres modules l'affichent
+// ---------------------------------------------------------------------------
+
+/**
+ * Chats des joueurs donnés (allure et équipement porté), lus auprès de la Forge.
+ * La Taverne et le Donjon l'utilisent par composition d'interface : leur code serveur ignore
+ * tout de la Forge, et un chat absent de la réponse garde simplement l'allure par défaut.
+ */
+export function useCats(playerIds: string[]): Record<string, PublicCat> {
+  const [cats, setCats] = useState<Record<string, PublicCat>>({})
+  // Clé stable : l'effet ne relit que si l'ensemble des joueurs change.
+  const key = [...new Set(playerIds)].sort().join(',')
+  useEffect(() => {
+    if (!key) return
+    let current = true
+    client.cats.$get({ query: { ids: key } }).then(async (res) => {
+      if (res.ok && current) setCats((await res.json()).cats)
+    })
+    return () => {
+      current = false
+    }
+  }, [key])
+  return cats
+}
+
+/** Allure par défaut d'un joueur qui n'a rien choisi : déduite de son identifiant. */
+function defaultLook(playerId: string): CatLook {
+  const { fur, eyes } = lookOf(playerId)
+  return {
+    kind: 'cat',
+    fur: isFurColor(fur) ? fur : FUR_COLORS[0],
+    eyes: isEyeColor(eyes) ? eyes : EYE_COLORS[0],
+  }
+}
+
+/** Chat public tiré de la vue de la forge du joueur, avec éventuellement une autre allure. */
+function catOfView(view: ForgeView, look: CatLook | null = view.look): PublicCat {
+  return {
+    look,
+    gear: Object.fromEntries(
+      SLOTS.map((slot) => {
+        const item = view.equipped[slot]
+        return [slot, item ? { recipe: item.recipe, quality: item.quality } : null]
+      }),
+    ) as PublicCat['gear'],
+  }
+}
+
+/** Propriétés de dessin d'un chat : allure choisie (ou par défaut) et équipement porté. */
+function catProps(playerId: string, cat: PublicCat | undefined) {
+  const look = cat?.look ?? defaultLook(playerId)
+  const gear = cat?.gear
+  return {
+    kitten: look.kind === 'kitten',
+    fur: look.fur,
+    belly: bellyFor(look.fur),
+    eyes: look.eyes,
+    helmet: !!gear?.helmet,
+    armor: !!gear?.armor,
+    weapon: !!gear?.weapon,
+    cape: !!gear?.cape,
+    capeColor: CAPE_COLORS[gear?.cape?.recipe ?? ''] ?? '#6a1a2a',
+  }
+}
+
+/** Le chat d'un joueur, avec son allure et son équipement, partout dans le jeu. */
+export function PlayerCat({
+  playerId,
+  cat,
+  ...rest
+}: { playerId: string; cat: PublicCat | undefined } & Omit<
+  CatAvatarProps,
+  keyof ReturnType<typeof catProps>
+>) {
+  return <CatAvatar {...catProps(playerId, cat)} {...rest} />
+}
 
 /** Affiche des quantités de ressources : « 60 🐟 40 🥛 ». */
 function Cost({ amounts }: { amounts: Amounts }) {
@@ -169,7 +257,6 @@ export function ForgeScreen({ userId }: { userId: string }) {
 
   const current = view.current
   const busy = current !== null
-  const worn = (slot: Slot) => view.equipped[slot] !== null
 
   return (
     <>
@@ -198,14 +285,10 @@ export function ForgeScreen({ userId }: { userId: string }) {
       >
         {/* Le chat du joueur, qui porte l'équipement de son inventaire. */}
         <span style={at('6%', '30%')}>
-          <CatAvatar
-            {...lookOf(userId)}
+          <PlayerCat
+            playerId={userId}
+            cat={catOfView(view)}
             size={190}
-            helmet={worn('helmet')}
-            armor={worn('armor')}
-            weapon={worn('weapon')}
-            cape={worn('cape')}
-            capeColor={CAPE_COLORS[view.equipped.cape?.recipe ?? ''] ?? '#6a1a2a'}
             label="Votre chat et son équipement"
           />
         </span>
@@ -357,6 +440,62 @@ function RecipesPanel({
   )
 }
 
+/** Choix de l'allure : silhouette, pelage et couleur des yeux, parmi ceux proposés. */
+function LookPanel({
+  look: current,
+  onChange,
+}: {
+  look: CatLook
+  onChange: (look: CatLook) => void
+}) {
+  return (
+    <div className="look">
+      <div className="row">
+        <span className="muted">Silhouette</span>
+        {CAT_KINDS.map((kind) => (
+          <button
+            key={kind}
+            type="button"
+            className={current.kind === kind ? undefined : 'secondary'}
+            aria-pressed={current.kind === kind}
+            onClick={() => onChange({ ...current, kind })}
+          >
+            {kind === 'cat' ? 'Chat chevalier' : 'Chaton écuyer'}
+          </button>
+        ))}
+      </div>
+      <div className="row">
+        <span className="muted">Pelage</span>
+        {FUR_COLORS.map((fur) => (
+          <button
+            key={fur}
+            type="button"
+            className="swatch"
+            aria-label={`Pelage ${fur}`}
+            aria-pressed={current.fur === fur}
+            style={{ background: fur }}
+            onClick={() => onChange({ ...current, fur })}
+          />
+        ))}
+      </div>
+      <div className="row">
+        <span className="muted">Regard</span>
+        {EYE_COLORS.map((eyes) => (
+          <button
+            key={eyes}
+            type="button"
+            className="swatch"
+            aria-label={`Yeux ${eyes}`}
+            aria-pressed={current.eyes === eyes}
+            style={{ background: eyes }}
+            onClick={() => onChange({ ...current, eyes })}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 /** Inventaire : objets forgés, équipement porté et gravures. */
 function Inventory({
   view,
@@ -374,7 +513,8 @@ function Inventory({
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <h2>Inventaire</h2>
         <span className="muted">
-          {view.inventory.length} objet(s) - équipement : {bonusText(view.bonuses) || 'aucun bonus'}
+          {view.inventory.length} objet(s) - équipement : {bonusText(view.bonuses) || 'aucun bonus'}{' '}
+          - <Link href="/avatar">changer l'allure de mon chat</Link>
         </span>
       </div>
       <div className="slots">
@@ -458,5 +598,106 @@ function ItemRow({
         )}
       </form>
     </li>
+  )
+}
+
+/**
+ * Page « Mon chat », ouverte depuis le château du Village : le joueur compose l'allure de son
+ * chat et voit l'équipement qu'il porte. Équiper et ôter les objets se fait à la Forge.
+ */
+export function AvatarScreen({ userId }: { userId: string }) {
+  const [view, setView] = useState<ForgeView | undefined>(undefined)
+  // Allure en cours de composition, tant qu'elle n'est pas enregistrée.
+  const [draft, setDraft] = useState<CatLook | null>(null)
+  const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null)
+  const [burst, fireBurst] = useFlash<true>(900)
+
+  const refresh = useCallback(async () => {
+    const res = await client.index.$get()
+    if (res.ok) setView((await res.json()).view)
+  }, [])
+
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+
+  const title = (
+    <h1>
+      <Entity kind="village" /> Mon chat
+    </h1>
+  )
+  if (!view) return title
+
+  const saved = view.look ?? defaultLook(userId)
+  const shown = draft ?? saved
+  const changed = shown.kind !== saved.kind || shown.fur !== saved.fur || shown.eyes !== saved.eyes
+
+  async function save() {
+    const res = await client.look.$post({ json: shown })
+    const body = (await res.json()) as { view: ForgeView } | { error: ApiError }
+    if ('error' in body) {
+      setMessage({ text: ERRORS[body.error.code] ?? 'Erreur.', error: true })
+      return
+    }
+    setView(body.view)
+    setDraft(null)
+    setMessage({
+      text: 'Allure enregistrée : les autres joueurs la verront partout.',
+      error: false,
+    })
+    fireBurst(true)
+  }
+
+  return (
+    <>
+      {title}
+      <Scene label="Salle du château" art="art-hall" backdrop={<HallBackdrop />}>
+        <span style={at('32.3%', 'auto', { bottom: '33%', transform: 'translateX(-50%)' })}>
+          <PlayerCat playerId={userId} cat={catOfView(view, shown)} size={160} label="Votre chat" />
+        </span>
+        {burst && <Burst key={burst.n} left="32.3%" top="40%" />}
+      </Scene>
+      <div className="avatar-panels">
+        <section className="panel" aria-label="Allure de mon chat">
+          <h2>Allure</h2>
+          <LookPanel look={shown} onChange={setDraft} />
+          <button type="button" className="wide" disabled={!changed} onClick={save}>
+            Enregistrer mon chat
+          </button>
+          {message && (
+            <p className={message.error ? 'error' : 'muted'} role="status">
+              {message.text}
+            </p>
+          )}
+        </section>
+        <section className="panel" aria-label="Équipement porté">
+          <h2>Équipement porté</h2>
+          <ul className="worn">
+            {SLOTS.map((slot) => {
+              const item = view.equipped[slot]
+              return (
+                <li key={slot}>
+                  <span className="muted">{look(slot).label}</span>{' '}
+                  {item ? (
+                    <>
+                      <Entity kind={item.recipe} showLabel />{' '}
+                      <span className="quality" data-quality={item.quality}>
+                        {look(item.quality).label}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="muted">aucun</span>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+          <p className="muted">{bonusText(view.bonuses) || 'Aucun bonus pour le moment.'}</p>
+          <Link className="button" href="/forge">
+            Forger et équiper à la forge
+          </Link>
+        </section>
+      </div>
+    </>
   )
 }

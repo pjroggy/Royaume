@@ -124,3 +124,54 @@ export function upgradeCost(level: number): Amounts {
   const factor = UPGRADE_GROWTH ** (level - START_LEVEL)
   return { wood: UPGRADE_BASE_COST.wood * factor, stone: UPGRADE_BASE_COST.stone * factor }
 }
+
+// ---------------------------------------------------------------------------
+// Allure du chat (règle 12)
+// ---------------------------------------------------------------------------
+
+/** Silhouettes possibles : chat chevalier ou chaton écuyer. */
+export const CAT_KINDS = ['cat', 'kitten'] as const
+export type CatKind = (typeof CAT_KINDS)[number]
+
+/** Pelages proposés au joueur, en couleurs « #rrggbb ». */
+export const FUR_COLORS = [
+  '#d9803a',
+  '#8f8a99',
+  '#2b2633',
+  '#efdcb8',
+  '#b8875a',
+  '#6e5a4a',
+  '#c9c2b8',
+] as const
+
+export type FurColor = (typeof FUR_COLORS)[number]
+
+/** Couleurs des yeux proposées au joueur. */
+export const EYE_COLORS = ['#ffb23f', '#7cf08f', '#9b6bff', '#7cc8ff', '#ff4d5e'] as const
+export type EyeColor = (typeof EYE_COLORS)[number]
+
+/**
+ * Allure choisie par le joueur pour son chat. Les types n'admettent que les choix proposés :
+ * le compilateur refuse une autre couleur, et le schéma de l'API en déduit les mêmes valeurs.
+ */
+export interface CatLook {
+  kind: CatKind
+  fur: FurColor
+  eyes: EyeColor
+}
+
+/** Gardes de type : vrai si la valeur fait partie des choix proposés. */
+export const isCatKind = (value: string): value is CatKind =>
+  (CAT_KINDS as readonly string[]).includes(value)
+export const isFurColor = (value: string): value is FurColor =>
+  (FUR_COLORS as readonly string[]).includes(value)
+export const isEyeColor = (value: string): value is EyeColor =>
+  (EYE_COLORS as readonly string[]).includes(value)
+
+/**
+ * Vrai si l'allure ne contient que des choix proposés par le jeu (règle 12). Les types le
+ * garantissent déjà dans le code ; la vérification à l'exécution protège le domaine d'une
+ * commande construite sans passer par le compilateur.
+ */
+export const isValidLook = (look: CatLook) =>
+  isCatKind(look.kind) && isFurColor(look.fur) && isEyeColor(look.eyes)

@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { bonusOf, INVENTORY_MAX, MAX_FORGE_LEVEL, RECIPES, upgradeCost } from './catalog'
+import {
+  bonusOf,
+  EYE_COLORS,
+  FUR_COLORS,
+  INVENTORY_MAX,
+  MAX_FORGE_LEVEL,
+  RECIPES,
+  upgradeCost,
+} from './catalog'
 import {
   decide,
   evolve,
@@ -10,7 +18,7 @@ import {
   transferIdOf,
 } from './forge'
 import { requestsFor } from './saga'
-import { toView } from './view'
+import { toPublicCat, toView } from './view'
 
 /*
  * Chaque bloc vérifie une règle de la fiche de cadrage (docs/evaluation/fiche-cadrage.md),
@@ -323,5 +331,49 @@ describe('Règle 11 - réponses du Village idempotentes', () => {
   it("retrouve le joueur à partir de l'identifiant d'un mouvement de la Forge", () => {
     expect(playerIdOf(transferIdOf('u42', 3, 'pay'))).toBe('u42')
     expect(playerIdOf('o1:reserve')).toBeNull()
+  })
+})
+
+describe('Règle 12 - allure du chat', () => {
+  const look = { kind: 'kitten', fur: FUR_COLORS[3], eyes: EYE_COLORS[1] } as const
+
+  it('enregistre la silhouette, le pelage et les yeux choisis parmi ceux du jeu', () => {
+    expect(initialState.look).toBeNull()
+    const { state } = play(initialState, { type: 'CustomizeCat', look })
+    expect(state.look).toEqual(look)
+    expect(toView(state, T0).look).toEqual(look)
+  })
+
+  it('refuse une silhouette, un pelage ou des yeux qui ne sont pas proposés', () => {
+    const invalid = { ok: false, error: { code: 'INVALID_LOOK' } }
+    const customize = (other: object): ForgeCommand => ({
+      type: 'CustomizeCat',
+      look: { ...look, ...other } as typeof look,
+    })
+    expect(decide(initialState, customize({ kind: 'dragon' }), T0)).toEqual(invalid)
+    expect(decide(initialState, customize({ fur: '#00ff00' }), T0)).toEqual(invalid)
+    expect(decide(initialState, customize({ eyes: 'red' }), T0)).toEqual(invalid)
+  })
+
+  it("n'enregistre rien si l'allure ne change pas", () => {
+    const { state } = play(initialState, { type: 'CustomizeCat', look })
+    expect(decide(state, { type: 'CustomizeCat', look }, T0)).toEqual({ ok: true, events: [] })
+  })
+
+  it("présente aux autres joueurs l'allure et l'équipement porté, sans les gravures", () => {
+    let state = play(collected, { type: 'CustomizeCat', look }).state
+    state = play(state, { type: 'EquipItem', itemId: 'item-1' }).state
+    state = play(state, { type: 'EngraveItem', itemId: 'item-1', text: 'Secret' }).state
+    const cat = toPublicCat(state)
+    expect(cat).toEqual({
+      look,
+      gear: {
+        helmet: { recipe: 'hornedHelm', quality: 'common' },
+        armor: null,
+        weapon: null,
+        cape: null,
+      },
+    })
+    expect(JSON.stringify(cat)).not.toContain('Secret')
   })
 })

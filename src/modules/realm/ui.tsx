@@ -54,7 +54,12 @@ const STATUS_LABELS = {
  * modules. La position (en pourcentage du décor) est celle du repère cliquable.
  */
 const PLACES = {
-  castle: { left: '33%', top: '57%', pin: 'Château', text: 'Le cœur du royaume des chats.' },
+  castle: {
+    left: '33%',
+    top: '57%',
+    pin: 'Château',
+    text: "Le cœur du royaume des chats : c'est ici que vous composez l'allure de votre chat.",
+  },
   sawmill: {
     left: '6%',
     top: '81%',
@@ -92,6 +97,7 @@ type Place = keyof typeof PLACES
 
 /** Adresse de la page de chaque lieu qui mène à un autre module. */
 const LINKS: Partial<Record<Place, { href: string; verb: string }>> = {
+  castle: { href: '/avatar', verb: 'Personnaliser mon chat' },
   dungeon: { href: '/dungeon', verb: 'Entrer dans la crypte' },
   market: { href: '/market', verb: 'Aller au marché' },
   tavern: { href: '/tavern', verb: 'Pousser la porte' },

@@ -1,9 +1,8 @@
 'use client'
 import { hc } from 'hono/client'
 import { type FormEvent, useCallback, useEffect, useState } from 'react'
+import { PlayerCat, useCats } from '@/modules/forge/ui'
 import { useChannel } from '@/platform/realtime/use-channel'
-import { CatAvatar } from '@/ui/art/cat-avatar'
-import { lookOf } from '@/ui/art/color'
 import { Hearts } from '@/ui/art/effects'
 import { at, Scene } from '@/ui/art/scene'
 import { TavernBackdrop } from '@/ui/art/tavern-room'
@@ -143,6 +142,8 @@ export function TavernScreen({ userId }: { userId: string }) {
     ...players.filter((player) => player.id === userId),
     ...players.filter((player) => player.id !== userId),
   ].slice(0, SEATS.length)
+  // Allure et équipement des joueurs présents, choisis à la Forge.
+  const cats = useCats(seated.map((player) => player.id))
   /** Dernier message d'un joueur, affiché dans sa bulle. */
   const lastWords = (id: string) => messages.findLast((message) => message.authorId === id)?.body
   // Sans choix du joueur, la bulle va à l'auteur du dernier message, s'il est présent.
@@ -225,13 +226,11 @@ export function TavernScreen({ userId }: { userId: string }) {
                 className={petted?.value === player.id ? 'hop' : undefined}
                 key={petted?.value === player.id ? petted.n : 0}
               >
-                <CatAvatar
-                  {...lookOf(player.id)}
+                <PlayerCat
+                  playerId={player.id}
+                  cat={cats[player.id]}
                   size={seat.size}
                   flip={seat.flip}
-                  helmet={player.id === userId}
-                  armor={false}
-                  weapon={false}
                   label=""
                 />
               </span>

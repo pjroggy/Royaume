@@ -3,6 +3,7 @@ import { hc } from 'hono/client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { PlayerCat, useCats } from '@/modules/forge/ui'
 import { useChannel } from '@/platform/realtime/use-channel'
 import { CatAvatar } from '@/ui/art/cat-avatar'
 import { lookOf } from '@/ui/art/color'
@@ -302,6 +303,12 @@ export function DungeonGame({ gameId, userId }: { gameId: string; userId: string
     checkDeadline,
   )
 
+  // Allure et équipement des héros joueurs, choisis à la Forge ; les compagnons restent des
+  // chatons écuyers. La lecture est faite avant tout retour anticipé (règles des hooks).
+  const cats = useCats(
+    (view?.heroes ?? []).filter((hero) => !hero.companion).map((hero) => hero.id),
+  )
+
   const title = (
     <div className="row" style={{ justifyContent: 'space-between' }}>
       <h1>
@@ -541,16 +548,24 @@ export function DungeonGame({ gameId, userId }: { gameId: string; userId: string
               <span className="hp" aria-hidden="true">
                 <span style={{ width: `${(hero.hp / hero.maxHp) * 100}%` }} />
               </span>
-              <CatAvatar
-                {...lookOf(hero.id)}
-                size={hero.companion ? 96 : 118}
-                kitten={hero.companion}
-                helmet={hero.id === userId}
-                weapon={!hero.companion}
-                pose={poseOf(hero.id)}
-                flip={false}
-                label={hero.name}
-              />
+              {hero.companion ? (
+                <CatAvatar
+                  {...lookOf(hero.id)}
+                  size={96}
+                  kitten
+                  helmet={false}
+                  pose={poseOf(hero.id)}
+                  label={hero.name}
+                />
+              ) : (
+                <PlayerCat
+                  playerId={hero.id}
+                  cat={cats[hero.id]}
+                  size={118}
+                  pose={poseOf(hero.id)}
+                  label={hero.name}
+                />
+              )}
               <span className="tag">{hero.name}</span>
             </span>
           )

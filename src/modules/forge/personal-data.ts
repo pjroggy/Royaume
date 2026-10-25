@@ -35,6 +35,7 @@ export function createForgePersonalData(service: ForgeService): PersonalDataCont
           equipped,
         })),
         current: view.current,
+        look: view.look,
       }
     },
 

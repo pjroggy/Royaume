@@ -5,6 +5,7 @@
 import {
   type Amounts,
   bonusOf,
+  type CatLook,
   MAX_FORGE_LEVEL,
   type Quality,
   qualityAt,
@@ -53,6 +54,8 @@ export interface ForgeView {
   /** Somme des bonus de l'équipement porté. */
   bonuses: { attack: number; defense: number }
   refusal: { missing: Amounts } | null
+  /** Allure du chat ; null tant que le joueur n'en a choisi aucune. */
+  look: CatLook | null
 }
 
 export function toView(state: ForgeState, now: number): ForgeView {
@@ -118,5 +121,27 @@ export function toView(state: ForgeState, now: number): ForgeView {
     equipped,
     bonuses,
     refusal: state.refusal ? { missing: state.refusal.missing } : null,
+    look: state.look,
   }
+}
+
+/**
+ * Chat d'un joueur tel que le voient les autres joueurs : son allure, et l'équipement qu'il
+ * porte. Les gravures n'y figurent pas : ce sont des données personnelles, que seul le joueur
+ * voit dans sa forge.
+ */
+export interface PublicCat {
+  look: CatLook | null
+  gear: Record<Slot, { recipe: RecipeId; quality: Quality } | null>
+}
+
+export function toPublicCat(state: ForgeState): PublicCat {
+  const byId = new Map(state.inventory.map((item) => [item.itemId, item]))
+  const gear = Object.fromEntries(
+    SLOTS.map((slot) => {
+      const item = byId.get(state.equipped[slot] ?? '')
+      return [slot, item ? { recipe: item.recipe, quality: item.quality } : null]
+    }),
+  ) as PublicCat['gear']
+  return { look: state.look, gear }
 }

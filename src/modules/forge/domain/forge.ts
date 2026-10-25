@@ -7,9 +7,11 @@
  */
 import {
   type Amounts,
+  type CatLook,
   ENGRAVING_MAX,
   INVENTORY_MAX,
   isRecipe,
+  isValidLook,
   MAX_FORGE_LEVEL,
   type Quality,
   qualityAt,
@@ -62,6 +64,8 @@ export interface ForgeState {
   equipped: Record<Slot, string | null>
   /** Dernier paiement refusé : le travail concerné et les quantités qui manquaient (règle 4). */
   refusal: { no: number; missing: Amounts } | null
+  /** Allure du chat choisie par le joueur ; null tant qu'il n'en a choisi aucune (règle 12). */
+  look: CatLook | null
 }
 
 export const initialState: ForgeState = {
@@ -71,6 +75,7 @@ export const initialState: ForgeState = {
   inventory: [],
   equipped: { helmet: null, armor: null, weapon: null, cape: null },
   refusal: null,
+  look: null,
 }
 
 // ---------------------------------------------------------------------------
@@ -91,6 +96,7 @@ export type ForgeEvent =
   | { type: 'ItemEquipped'; data: { itemId: string; slot: Slot; at: number } }
   | { type: 'SlotEmptied'; data: { slot: Slot; at: number } }
   | { type: 'ItemEngraved'; data: { itemId: string; text: string; at: number } }
+  | { type: 'CatCustomized'; data: CatLook & { at: number } }
 
 // ---------------------------------------------------------------------------
 // Commandes
@@ -105,6 +111,7 @@ export type ForgeCommand =
   | { type: 'EquipItem'; itemId: string }
   | { type: 'UnequipSlot'; slot: Slot }
   | { type: 'EngraveItem'; itemId: string; text: string }
+  | { type: 'CustomizeCat'; look: CatLook }
   // Commande de la saga, issue d'une réponse du Village dans la boîte d'envoi.
   | {
       type: 'RecordTransferResult'
@@ -123,6 +130,7 @@ export type ForgeError =
   | { code: 'NOT_CANCELLABLE' }
   | { code: 'NOT_IN_INVENTORY' }
   | { code: 'INVALID_ENGRAVING'; max: number }
+  | { code: 'INVALID_LOOK' }
 
 export type Decision = { ok: true; events: ForgeEvent[] } | { ok: false; error: ForgeError }
 
@@ -215,6 +223,10 @@ export function evolve(state: ForgeState, event: ForgeEvent): ForgeState {
           item.itemId === event.data.itemId ? { ...item, engraving: event.data.text } : item,
         ),
       }
+    case 'CatCustomized': {
+      const { kind, fur, eyes } = event.data
+      return { ...state, look: { kind, fur, eyes } }
+    }
   }
 }
 
@@ -308,6 +320,15 @@ export function decide(state: ForgeState, command: ForgeCommand, now: number): D
         return fail({ code: 'INVALID_ENGRAVING', max: ENGRAVING_MAX })
       }
       return accept({ type: 'ItemEngraved', data: { itemId: command.itemId, text, at: now } })
+    }
+
+    case 'CustomizeCat': {
+      // Règle 12 : une silhouette, un pelage et des yeux choisis parmi ceux du jeu.
+      const { kind, fur, eyes } = command.look
+      if (!isValidLook({ kind, fur, eyes })) return fail({ code: 'INVALID_LOOK' })
+      const same = state.look?.kind === kind && state.look.fur === fur && state.look.eyes === eyes
+      if (same) return accept()
+      return accept({ type: 'CatCustomized', data: { kind, fur, eyes, at: now } })
     }
 
     case 'RecordTransferResult':
