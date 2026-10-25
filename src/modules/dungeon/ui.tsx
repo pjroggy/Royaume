@@ -67,8 +67,10 @@ const STATUS_LABELS = {
 // ---------------------------------------------------------------------------
 
 /** Écran d'accueil du Donjon : expéditions ouvertes et ouverture d'une expédition. */
-export function DungeonLobby() {
+export function DungeonLobby({ userId }: { userId: string }) {
   const router = useRouter()
+  // Le chat du joueur (allure et équipement), lu auprès de la Forge.
+  const cats = useCats([userId])
   const [games, setGames] = useState<OpenGame[] | undefined>(undefined)
   const [difficulty, setDifficulty] = useState<Difficulty>('easy')
 
@@ -143,7 +145,7 @@ export function DungeonLobby() {
       >
         {/* Une équipe attend devant la crypte ; l'Aspirateur ronfle au fond de la salle. */}
         <span style={at('4%', '40%')}>
-          <CatAvatar size={150} label="" />
+          <PlayerCat playerId={userId} cat={cats[userId]} size={150} label="Votre chat" />
         </span>
         <span style={at('16%', '48%')}>
           <CatAvatar

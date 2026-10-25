@@ -1,9 +1,8 @@
 'use client'
 import { hc } from 'hono/client'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { PlayerCat, useCats } from '@/modules/forge/ui'
 import { type ChannelEvent, useChannel } from '@/platform/realtime/use-channel'
-import { CatAvatar } from '@/ui/art/cat-avatar'
-import { lookOf } from '@/ui/art/color'
 import { Hearts } from '@/ui/art/effects'
 import { HallBackdrop } from '@/ui/art/hall-of-heroes'
 import { at, Scene } from '@/ui/art/scene'
@@ -84,6 +83,8 @@ export function RankingScreen({ userId }: { userId: string }) {
 
   const status = useChannel(RANKING_CHANNEL, follow)
   const entries = ranking?.entries
+  // Chats des trois premiers, avec leur allure et leur équipement, lus auprès de la Forge.
+  const cats = useCats((entries ?? []).slice(0, 3).map((entry) => entry.playerId))
   // Un clic sur un chat du podium le fait ronronner.
   const [purr, firePurr] = useFlash<string>(1400)
   // Une ligne qui vient de changer clignote : la mise à jour se voit.
@@ -149,10 +150,10 @@ export function RankingScreen({ userId }: { userId: string }) {
             })}
             onClick={() => firePurr(entry.playerId)}
           >
-            <CatAvatar
-              {...lookOf(entry.playerId)}
+            <PlayerCat
+              playerId={entry.playerId}
+              cat={cats[entry.playerId]}
               size={PODIUM[index].size}
-              helmet={entry.playerId === userId}
               label=""
             />
             {purr?.value === entry.playerId && (

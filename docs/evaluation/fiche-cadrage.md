@@ -3,7 +3,6 @@
 - Auteur : Pierre-Jean Roggy
 - Date : 23 octobre 2026
 - Nom technique du module : `forge`
-- Validée par l'enseignant le :
 
 ## L'idée
 
@@ -107,10 +106,11 @@ données ne sont pas destinées à disparaître rapidement, à la différence de
   dans une expédition, le Donjon lit les bonus de l'équipement porté. Le Donjon passerait par
   `src/modules/forge/contracts.ts` et `index.ts`, sans importer de fichier interne.
 
-- **Taverne et Donjon**, par **composition d'interface** : leurs écrans dessinent les joueurs
+- **Taverne, Donjon et Classement**, par **composition d'interface** : leurs écrans dessinent les joueurs
   avec le composant `PlayerCat` et le hook `useCats`, exportés par l'entrée publique `ui.tsx`
   de la Forge, qui lisent `GET /api/forge/cats`. Ces modules ne connaissent ni le domaine ni
   le stockage de la Forge ; leur propre code serveur n'est pas modifié.
+  Les deux nouveaux appels passent par l’entrée publique @/modules/forge/ui : dependency-cruiser les acceptera. Le podium lira au plus 3 chats, bien sous la limite de 20 par requête.
 
 ## Les données personnelles
 
