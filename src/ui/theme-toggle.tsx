@@ -1,5 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
+import type { IconType } from 'react-icons'
+import { GiEclipse, GiMoon, GiSunset } from 'react-icons/gi'
 import {
   nextPreference,
   parsePreference,
@@ -8,10 +10,10 @@ import {
 } from './color-scheme'
 
 /** Apparence du bouton pour chaque préférence. */
-const LABELS: Record<SchemePreference, { glyph: string; label: string }> = {
-  system: { glyph: '🌗', label: 'Thème du système' },
-  light: { glyph: '🌇', label: 'Crépuscule' },
-  dark: { glyph: '🌙', label: 'Nuit' },
+const LABELS: Record<SchemePreference, { icon: IconType; label: string }> = {
+  system: { icon: GiEclipse, label: 'Thème du système' },
+  light: { icon: GiSunset, label: 'Crépuscule' },
+  dark: { icon: GiMoon, label: 'Nuit' },
 }
 
 /** Durée de conservation du cookie de préférence : un an. */
@@ -47,7 +49,7 @@ export function ThemeToggle() {
     setPreference(next)
   }
 
-  const { glyph, label } = LABELS[preference ?? 'system']
+  const { icon: Icon, label } = LABELS[preference ?? 'system']
   return (
     <button
       className="link theme-toggle"
@@ -55,7 +57,7 @@ export function ThemeToggle() {
       onClick={toggle}
       title={`${label} : cliquer pour changer`}
     >
-      <span aria-hidden="true">{glyph}</span> {label}
+      <Icon className="icon" aria-hidden="true" focusable="false" /> {label}
     </button>
   )
 }

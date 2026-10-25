@@ -141,7 +141,7 @@ export function PlayerCat({
   return <CatAvatar {...catProps(playerId, cat)} {...rest} />
 }
 
-/** Affiche des quantités de ressources : « 60 🐟 40 🥛 ». */
+/** Affiche des quantités de ressources : « 60 [poisson] 40 [lait] », chacune avec son icône. */
 function Cost({ amounts }: { amounts: Amounts }) {
   return (
     <>

@@ -98,6 +98,8 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Entités du jeu (couche de thème). */
 .entity { display: inline-flex; gap: 6px; align-items: center; }
+/* Icônes Game-icons.net : elles suivent la taille et, sauf teinte propre, la couleur du texte. */
+.icon { width: 1.15em; height: 1.15em; flex: none; vertical-align: -0.2em; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
 /* Formulaires. */
@@ -140,7 +142,7 @@ input, select {
 button.link { background: none; border: 0; min-height: 0; color: var(--accent); padding: 0; box-shadow: none; }
 
 /* Choix du thème (jour, nuit, système). */
-.theme-toggle { white-space: nowrap; }
+.theme-toggle { white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
 
 /* Indicateur de connexion temps réel. */
 .status { font-size: 0.85rem; color: var(--muted); }
