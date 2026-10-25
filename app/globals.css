@@ -179,3 +179,25 @@ input.amount { width: 5em; }
 
 /* Mes données : un lien présenté comme un bouton */
 a.button { display: block; margin-top: 8px; padding: 10px 14px; border-radius: 10px; text-align: center; font-family: var(--title-font); font-weight: 700; background: linear-gradient(180deg, #ffb46a, #e0601f); color: var(--on-accent); text-decoration: none; }
+/* Guide du jeu : fenêtre modale du navigateur (élément dialog). */
+.guide-button { display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; }
+dialog.guide {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  margin: auto;
+  padding: 20px 22px;
+  color: var(--ink);
+  /* La fenêtre est placée dans la barre de navigation : elle reprend la police du texte. */
+  font-family: 'Alegreya Sans', system-ui, sans-serif;
+  font-weight: 400;
+  /* Fond opaque : le panneau semi-transparent est posé sur la couleur de la page. */
+  background: linear-gradient(var(--panel), var(--panel)), var(--bg);
+}
+dialog.guide::backdrop { background: rgb(0 0 0 / 0.6); backdrop-filter: blur(2px); }
+.guide h2 { display: flex; gap: 8px; align-items: center; }
+.guide-body p { line-height: 1.55; }
+.guide-dots { display: flex; gap: 6px; justify-content: center; margin: 12px 0; }
+.guide-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--frame); }
+.guide-dots span[data-current] { background: var(--accent); }
+.guide-actions { justify-content: space-between; flex-wrap: wrap; gap: 8px; }

@@ -83,6 +83,8 @@ export const theme: Record<string, Look> = {
   steelClaws: { icon: GiClaws, color: '#b9c0cc', label: "Griffes d'acier" },
   midnightCape: { icon: GiCape, color: '#7c95c9', label: 'Cape de minuit' },
   catnipCape: { icon: GiCloak, color: '#6fbf5a', label: "Cape d'herbe à chat" },
+  // Aide.
+  help: { icon: GiHelp, label: 'Aide' },
   // Emplacements d'équipement.
   helmet: { icon: GiVikingHelmet, label: 'casque' },
   armor: { icon: GiBreastplate, label: 'armure' },

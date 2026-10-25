@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { authClient } from '@/platform/auth/client'
 import { Entity } from './entity'
+import { Guide } from './guide'
 import { ThemeToggle } from './theme-toggle'
 
 /** Liens de navigation : chaque module ajouté au jeu y reçoit une entrée. */
@@ -17,8 +18,8 @@ export const NAV = [
 ]
 
 /**
- * Cadre de l'espace de jeu : navigation, nom du joueur, choix du thème, accès à ses données
- * et déconnexion.
+ * Cadre de l'espace de jeu : navigation, nom du joueur, guide du jeu, choix du thème, accès à
+ * ses données et déconnexion.
  */
 export function AppShell({ userName, children }: { userName: string; children: ReactNode }) {
   const pathname = usePathname()
@@ -45,6 +46,7 @@ export function AppShell({ userName, children }: { userName: string; children: R
         <span className="muted" style={{ marginLeft: 'auto' }}>
           {userName}
         </span>
+        <Guide />
         <ThemeToggle />
         <Link href="/account" aria-current={pathname === '/account' ? 'page' : undefined}>
           Mes données
