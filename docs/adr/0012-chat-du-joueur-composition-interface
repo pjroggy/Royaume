@@ -1,0 +1,103 @@
+# ADR-0012 - Le chat du joueur : allure et équipement tenus par la Forge, affichés dans les autres modules par composition d'interface
+
+- Statut : accepté
+- Date : 2026-10-25
+
+## Contexte
+
+- Chaque joueur est représenté par un chat. Avant la Forge, chaque écran dessinait un chat
+  dont la couleur était tirée de l'identifiant du joueur (`lookOf`), sans aucun choix du
+  joueur ni aucun équipement.
+- Le besoin : le joueur compose l'allure de son chat (silhouette, pelage, regard) depuis le
+  château de son village. Il l'équipe à la Forge. Les autres joueurs le voient tel quel à la
+  Taverne, dans le Donjon (entrée et combat) et sur le podium du Classement.
+- L'allure et l'équipement porté décrivent le même chat. L'équipement est déjà tenu par la
+  Forge (ADR 0010).
+- Un module n'est utilisé de l'extérieur que par `index.ts`, `contracts.ts` et `ui.tsx`. Le
+  code client n'importe aucun code serveur.
+- La Taverne n'utilise pas l'Event Sourcing (ADR 0008). Les héros du Donjon et les lignes du
+  Classement ne connaissent que l'identifiant et le nom du joueur.
+- Les gravures sont des données personnelles (ADR 0010) : elles ne doivent jamais être
+  montrées aux autres joueurs.
+
+## Décision
+
+- **Données dans la Forge.** L'allure est un événement du flux de la forge, `CatCustomized`
+  (règle 12 : seuls les choix proposés par le jeu sont acceptés, `INVALID_LOOK` sinon).
+  Les types `FurColor` et `EyeColor`, déduits des listes du catalogue, sont partagés par le
+  domaine, le schéma Zod de l'API et le client typé.
+- **Page au château.** La page « Mon chat » (`app/(jeu)/avatar/page.tsx`) affiche
+  `AvatarScreen`, exporté par `src/modules/forge/ui.tsx`. Le château de la carte du Village y
+  mène par un simple lien de l'interface (`LINKS.castle` dans `src/modules/realm/ui.tsx`) :
+  le domaine et le serveur du Village ne sont pas modifiés.
+- **Lecture publique restreinte.** `GET /api/forge/cats?ids=a,b,c` renvoie, pour 1 à 20
+  joueurs connus de la page, leur allure et leur équipement porté (recette et qualité). La
+  vue `PublicCat` (`domain/view.ts`) ne contient aucun champ de gravure : leur absence est
+  garantie par le type, et vérifiée par un test de l'API. La route est réservée aux joueurs
+  connectés.
+- **Composition d'interface.** L'entrée publique `ui.tsx` de la Forge exporte le hook
+  `useCats(identifiants)` et le composant `PlayerCat`. La Taverne, le Donjon et le Classement
+  les importent par `@/modules/forge/ui` pour dessiner les joueurs. Leur code serveur et leurs
+  contrats ne sont pas modifiés.
+- Un joueur qui n’a rien choisi, ou dont le chat n’est pas encore lu, est dessiné avec l’allure déduite de son identifiant.
+
+## Conséquences
+
+### Positives
+
+- Une seule source pour le chat d'un joueur, et un seul composant pour le dessiner : un objet
+  équipé à la Forge apparaît partout, sans que les autres modules changent.
+- Aucun nouveau module, donc pas de deuxième contributeur aux données personnelles et pas de
+  synchronisation entre deux flux pour dessiner un même chat.
+- Les modules consommateurs ne dépendent que d'une entrée publique, que dependency-cruiser
+  autorise et vérifie.
+- La confidentialité des gravures est garantie par construction plutôt que par un filtre
+  facile à oublier.
+
+### Négatives
+
+- **Une requête de plus par écran.** Chaque écran lit les chats depuis le navigateur, après
+  son propre chargement. Le chat apparaît donc un instant après la scène.
+  Le chat par défaut s’affiche un instant, avant d’être remplacé par celui du joueur.
+- Le chat n'existe que dans l'interface. Le serveur du Donjon, les projections du Classement
+  et l'export d'un autre module ne connaissent ni l'allure ni l'équipement. Appliquer les
+  bonus d'équipement en combat (bonus B6) demandera une lecture côté serveur.
+- **Couplage d'interface.** Une modification de `PlayerCat` ou de `useCats` touche quatre
+  écrans de quatre modules. Aucune règle d'architecture ne le signale : seuls les tests et une
+  vérification visuelle le détectent.
+- N'importe quel joueur connecté peut lire l'allure et l'équipement de n'importe quel
+  identifiant. C'est voulu, puisque ces informations sont publiques dans le jeu, mais
+  l'énumération n'est limitée que par le plafond de 20 identifiants par requête.
+- La page « Mon chat » est ouverte depuis le Village, alors que ses données sont dans la
+  Forge : un développeur qui cherche l'avatar dans le module `realm` ne le trouvera pas.
+
+## Alternatives écartées
+
+- **Un module « profil » ou « avatar »** : il aurait demandé un contributeur aux données
+  personnelles, une fonction d'aptitude et un canal supplémentaires. Pour dessiner un chat
+  équipé, il aurait aussi fallu croiser deux flux, l'allure d'un côté et l'équipement de
+  l'autre.
+- **L'allure dans le Village** : cela modifie le domaine du Village et son service extrait
+  (ADR 0009), pour une donnée qu'aucune de ses règles n'utilise.
+- **Le chat ajouté aux réponses serveur de la Taverne, du Donjon et du Classement** : les
+  serveurs de trois modules dépendraient de la Forge, et leurs routes et leurs tests seraient
+  modifiés. La composition d'interface obtient le même affichage sans les toucher.
+- **Une projection des chats publics lue par les autres modules** (langage publié, ADR 0006) :
+  plus performante, mais disproportionnée pour l'affichage d'une vingtaine de chats au plus.
+  Elle est conservée comme évolution (ADR 0010, Réexamen).
+- **Garder le chat tiré de l'identifiant** : cela ne répond pas au besoin.
+
+## Réexamen
+
+- Si le Donjon doit appliquer les bonus d'équipement côté serveur (bonus B6).
+- Si un écran doit afficher plus de 20 chats, ou si le temps d'apparition des chats devient
+  gênant : une projection des chats publics, ou l'inclusion du chat dans les réponses serveur.
+
+## Usage de l'IA générative
+
+Claude (Anthropic), le 2026-10-25 : conception avec l'auteur du découpage (données dans la
+Forge, page au château, composition d'interface), écriture du code (`ui.tsx`, route
+`/cats`, règle 12 et ses tests) et rédaction de cet ADR. L'idée de placer la création de
+l'avatar au château vient de l'auteur. Vérification par l'auteur : `pnpm verify`, relecture du
+test « présente l'allure et l'équipement des joueurs demandés, sans leurs gravures », et
+contrôle visuel avec deux comptes à la Taverne, au Donjon et au Classement.

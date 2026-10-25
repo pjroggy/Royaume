@@ -15,3 +15,7 @@ un nouvel ADR est rédigé et l'ancien prend le statut « remplacé ».
 | [0007](0007-saga-boite-envoi.md) | Saga orchestrée et boîte d'envoi transactionnelle pour les opérations entre modules | Accepté |
 | [0008](0008-donnees-personnelles.md) | Stockage classique pour la Taverne, et réécriture ciblée du journal pour l'effacement | Accepté |
 | [0009](0009-extraction-village.md) | Extraction du Village en service autonome, préparée mais non déployée | Accepté |
+| [0010](0010-forge-journal-evenements.md) | La Forge stockée dans le journal d'événements, un flux par joueur | Accepté |
+| [0011](0011-forge-saga-village.md) | Paiement des fabrications par une saga orchestrée par la Forge, échangée avec le Village par messages | Accepté |
+| [0012](0012-chat-du-joueur-composition-interface.md) | Le chat du joueur : données dans la Forge, affichage par composition d'interface | Accepté |
+| [0013](0013-icones-game-icons.md) | Icônes Game-icons.net, par react-icons, à la place des émojis | Accepté |

@@ -1,0 +1,75 @@
+# ADR-0013 - Icônes Game-icons.net, par react-icons, à la place des émojis
+
+- Statut : accepté
+- Date : 2026-10-25
+
+## Contexte
+
+- Les entités du jeu (lieux, ressources, bâtiments, monstres, objets de la Forge) étaient
+  représentées par des émojis, déclarés dans la couche de thème (`src/ui/theme.ts`). Leur
+  dessin dépend du système du joueur : il change entre Windows, macOS et Android, et certains
+  émojis récents s'affichent comme un carré vide.
+- La couche de thème a été conçue pour qu'un changement de direction artistique ne modifie
+  qu'elle : les composants demandent l'apparence d'une entité par son identifiant
+  (`look(kind)`, composant `Entity`).
+- Game-icons.net propose plus de 4 000 icônes de jeu dans un style homogène, sous licence
+  CC BY 3.0, qui impose de créditer les auteurs. Le paquet `react-icons` les expose comme
+  composants React (préfixe `Gi`), importables un par un.
+- Chaque dépendance ajoutée au code client augmente le volume envoyé au navigateur et la
+  surface des alertes de sécurité.
+
+## Décision
+
+- Le paquet `react-icons` est ajouté en version exacte (`5.5.0`), comme les autres dépendances
+  du projet.
+- `Look` remplace son symbole par un composant d'icône facultatif (`icon`) et une teinte
+  facultative (`color`). Seuls `src/ui/theme.ts`, `src/ui/entity.tsx` et
+  `src/ui/theme-toggle.tsx` importent `react-icons`. Les icônes sont importées une à une, et
+  jamais par la collection entière.
+- Les qualités des objets restent présentées par leur seul libellé, dans un badge coloré.
+- Les auteurs et la licence sont crédités dans `docs/credits.md` et à la dernière page du guide
+  du jeu.
+
+## Conséquences
+
+### Positives
+
+- Un dessin identique sur tous les systèmes, dans un style cohérent avec le thème des chats.
+- Le changement n'a touché que la couche de thème : aucun écran de module n'a été modifié, ce
+  qui confirme la décision de séparer l'apparence des identifiants du domaine.
+- Les icônes suivent la couleur du texte : elles s'adaptent au thème de jour et de nuit, sauf
+  les teintes propres aux ressources et aux objets.
+
+### Négatives
+
+- Une dépendance de plus, à surveiller dans `pnpm audit`. Une mise à jour de `react-icons`
+  peut renommer ou retirer une icône : la compilation échouerait alors, sans régression
+  silencieuse.
+- La licence impose un crédit, que tout nouvel usage d'icône doit tenir à jour.
+- Les teintes propres sont choisies pour le thème de nuit, et leur contraste sur le thème de
+  jour n'a pas été mesuré.
+- Les icônes ont été choisies par analogie (un aspirateur pour le Troll, une brique de lait
+  pour la ressource `stone`), et non dessinées pour le jeu.
+
+## Alternatives écartées
+
+- **Garder les émojis** : leur rendu dépend du système, ce qui est la raison de la décision.
+- **Copier les fichiers SVG de Game-icons.net dans le dépôt** : aucune dépendance, mais une
+  centaine de fichiers à maintenir et un composant de chargement à écrire.
+- **Une police d'icônes** : son chargement retarde l'affichage, elle est moins accessible, et
+  elle contient toutes les icônes même inutilisées.
+- **Dessiner les icônes, comme les décors de `src/ui/art/`** : un travail graphique
+  disproportionné tant que la refonte du style n'est pas engagée.
+
+## Réexamen
+
+- À la refonte du style graphique du jeu.
+- Si l'analyse du volume envoyé par `pnpm build` montre que les icônes pèsent plus que prévu.
+
+## Usage de l'IA générative
+
+Claude (Anthropic), le 2026-10-25 : choix des icônes parmi Game-icons.net, vérification de
+leur présence dans la source exacte de `react-icons` 5.5.0, écriture de la couche d'icônes et
+rédaction de cet ADR. La demande de remplacer les émojis vient de l'auteur. Vérification par
+l'auteur : `pnpm verify`, `pnpm build`, et contrôle visuel des écrans en thème de jour et de
+nuit.
