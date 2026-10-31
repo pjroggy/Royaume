@@ -5,12 +5,24 @@ import { useCallback, useEffect, useState } from 'react'
 import { useChannel } from '@/platform/realtime/use-channel'
 import { CatAvatar, type CatAvatarProps } from '@/ui/art/cat-avatar'
 import { bellyFor, lookOf } from '@/ui/art/color'
-import { Burst, FloatText } from '@/ui/art/effects'
+import { Burst } from '@/ui/art/effects'
 import { ForgeBackdrop, HotMetal } from '@/ui/art/forge-room'
 import { HallBackdrop } from '@/ui/art/hall-of-heroes'
 import { at, Scene } from '@/ui/art/scene'
 import { useFlash } from '@/ui/art/use-flash'
 import { Entity } from '@/ui/entity'
+import {
+  AnimatedNumber,
+  BOUNCY_SPRING,
+  FloatUp,
+  Gauge,
+  Hop,
+  MotionRoot,
+  motion,
+  SOFT_SPRING,
+  SparkBurst,
+  Swap,
+} from '@/ui/motion'
 import { look } from '@/ui/theme'
 import { useCountdown } from '@/ui/use-countdown'
 import type { ForgeApi } from './api'
@@ -178,6 +190,8 @@ export function ForgeScreen({ userId }: { userId: string }) {
   // Effets visuels : gerbe sur l'enclume, texte qui s'envole.
   const [burst, fireBurst] = useFlash<true>(900)
   const [gain, fireGain] = useFlash<string>(1600)
+  // Objet qui vient d'être retiré : son icône vole de l'enclume jusqu'à l'inventaire.
+  const [flight, fireFlight] = useFlash<string>(1200)
 
   // REQUÊTE : lecture de la forge, qui fait aussi reprendre une saga interrompue.
   const refresh = useCallback(async () => {
@@ -231,6 +245,7 @@ export function ForgeScreen({ userId }: { userId: string }) {
     const next = await handle(await client.collect.$post())
     const item = next?.inventory.at(-1)
     if (item) {
+      fireFlight(item.itemId)
       fireBurst(true)
       fireGain(`${look(item.recipe).label} ${look(item.quality).label} !`)
     }
@@ -248,7 +263,8 @@ export function ForgeScreen({ userId }: { userId: string }) {
         {view && (
           <span className="muted">
             {' '}
-            - niveau {view.level} / {view.maxLevel}, qualité {look(view.quality).label}
+            - niveau <AnimatedNumber value={view.level} /> / {view.maxLevel}, qualité{' '}
+            {look(view.quality).label}
           </span>
         )}
       </h1>
@@ -263,9 +279,11 @@ export function ForgeScreen({ userId }: { userId: string }) {
 
   const current = view.current
   const busy = current !== null
+  // Le chat fait un petit bond chaque fois que son équipement change.
+  const outfit = SLOTS.map((slot) => view.equipped[slot]?.itemId ?? '-').join('|')
 
   return (
-    <>
+    <MotionRoot>
       {title}
       <Scene
         label="Atelier de la forge"
@@ -291,38 +309,86 @@ export function ForgeScreen({ userId }: { userId: string }) {
       >
         {/* Le chat du joueur, qui porte l'équipement de son inventaire. */}
         <span style={at('6%', '30%')}>
-          <PlayerCat
-            playerId={userId}
-            cat={catOfView(view)}
-            size={190}
-            label="Votre chat et son équipement"
-          />
+          <Hop bumpKey={outfit}>
+            <PlayerCat
+              playerId={userId}
+              cat={catOfView(view)}
+              size={190}
+              label="Votre chat et son équipement"
+            />
+          </Hop>
         </span>
 
         {/* L'enclume : un objet chauffé à blanc pendant la fabrication, prêt ensuite. */}
         {current?.kind === 'item' && current.status !== 'paying' && (
-          <span className="anvil-item" style={at('42%', '58%', { width: '12%' })}>
+          <motion.span
+            key={current.status}
+            className="anvil-item"
+            style={at('42%', '58%', { width: '12%' })}
+            initial={{ scale: 0.3, opacity: 0, y: 12 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={BOUNCY_SPRING}
+          >
             {current.status === 'forging' ? (
               <HotMetal />
             ) : (
               <button type="button" className="ready-item" onClick={collect}>
-                <Entity kind={current.recipe ?? 'forge'} /> Retirer
+                <motion.span layoutId="anvil-item" className="anvil-flight">
+                  <Entity kind={current.recipe ?? 'forge'} />
+                </motion.span>{' '}
+                Retirer
               </button>
             )}
-          </span>
+          </motion.span>
         )}
 
-        {burst && <Burst key={burst.n} left="48%" top="68%" />}
-        {gain && <FloatText key={gain.n} left="48%" top="58%" text={gain.value} />}
+        {burst && <SparkBurst key={burst.n} left="48%" top="68%" />}
+        {gain && <FloatUp key={gain.n} left="48%" top="58%" text={gain.value} />}
       </Scene>
 
-      <Inventory view={view} onEquip={equip} onUnequip={unequip} onEngrave={engrave} />
-    </>
+      <Inventory
+        view={view}
+        flight={flight?.value ?? null}
+        onEquip={equip}
+        onUnequip={unequip}
+        onEngrave={engrave}
+      />
+    </MotionRoot>
   )
 }
 
 /** Travail en cours : paiement, fabrication, objet prêt ; ou amélioration de la forge. */
 function WorkPanel({
+  view,
+  remaining,
+  onUpgrade,
+  onCancel,
+  onCollect,
+}: {
+  view: ForgeView
+  remaining: number | null
+  onUpgrade: () => void
+  onCancel: () => void
+  onCollect: () => void
+}) {
+  // Chaque état du travail a sa clé : le panneau change d'état en fondu, au lieu de sauter.
+  const current = view.current
+  const state = current ? `${current.kind}-${current.status}` : 'idle'
+  return (
+    <Swap stateKey={state}>
+      <WorkContent
+        view={view}
+        remaining={remaining}
+        onUpgrade={onUpgrade}
+        onCancel={onCancel}
+        onCollect={onCollect}
+      />
+    </Swap>
+  )
+}
+
+/** Contenu du panneau du travail en cours, pour l'état présent. */
+function WorkContent({
   view,
   remaining,
   onUpgrade,
@@ -375,9 +441,7 @@ function WorkPanel({
         </h2>
         {current.status === 'forging' ? (
           <>
-            <div className="gauge">
-              <div style={{ width: `${Math.min(100, (1 - left / total) * 100)}%` }} />
-            </div>
+            <Gauge ratio={1 - left / total} />
             <div className="line">
               <span>Prêt dans</span>
               <strong>{duration(left)}</strong>
@@ -403,9 +467,7 @@ function WorkPanel({
           {view.level} / {view.maxLevel}
         </strong>
       </div>
-      <div className="gauge">
-        <div style={{ width: `${(view.level / view.maxLevel) * 100}%` }} />
-      </div>
+      <Gauge ratio={view.level / view.maxLevel} />
       <div className="line">
         <span>Qualité des objets</span>
         <strong className="quality" data-quality={view.quality}>
@@ -442,8 +504,13 @@ function RecipesPanel({
     <div className="panel">
       <h2>Recettes</h2>
       <ul className="recipes">
-        {view.recipes.map((recipe) => (
-          <li key={recipe.recipe}>
+        {view.recipes.map((recipe, i) => (
+          <motion.li
+            key={recipe.recipe}
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ ...SOFT_SPRING, delay: i * 0.04 }}
+          >
             <span>
               <Entity kind={recipe.recipe} showLabel />
               <small className="muted">
@@ -453,10 +520,17 @@ function RecipesPanel({
               <br />
               <Cost amounts={recipe.cost} />
             </span>
-            <button type="button" disabled={busy} onClick={() => onOrder(recipe.recipe)}>
+            <motion.button
+              type="button"
+              disabled={busy}
+              onClick={() => onOrder(recipe.recipe)}
+              whileHover={busy ? undefined : { scale: 1.06 }}
+              whileTap={busy ? undefined : { scale: 0.92 }}
+              transition={BOUNCY_SPRING}
+            >
               Forger
-            </button>
-          </li>
+            </motion.button>
+          </motion.li>
         ))}
       </ul>
     </div>
@@ -522,11 +596,14 @@ function LookPanel({
 /** Inventaire : objets forgés, équipement porté et gravures. */
 function Inventory({
   view,
+  flight,
   onEquip,
   onUnequip,
   onEngrave,
 }: {
   view: ForgeView
+  /** Objet qui vient d'être retiré de l'enclume : son icône y arrive en vol. */
+  flight: string | null
   onEquip: (itemId: string) => void
   onUnequip: (slot: Slot) => void
   onEngrave: (itemId: string, text: string) => void
@@ -547,7 +624,20 @@ function Inventory({
             <span key={slot} className="slot" data-filled={worn !== null}>
               <small className="muted">{look(slot).label}</small>
               <br />
-              {worn ? <Entity kind={worn.recipe} showLabel /> : <span className="muted">vide</span>}
+              {/* La clé change avec l'objet porté : le nouveau contenu apparaît d'un rebond. */}
+              <motion.span
+                key={worn?.itemId ?? 'vide'}
+                style={{ display: 'inline-block' }}
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={BOUNCY_SPRING}
+              >
+                {worn ? (
+                  <Entity kind={worn.recipe} showLabel />
+                ) : (
+                  <span className="muted">vide</span>
+                )}
+              </motion.span>
             </span>
           )
         })}
@@ -560,6 +650,7 @@ function Inventory({
           <ItemRow
             key={item.itemId}
             item={item}
+            flying={item.itemId === flight}
             onEquip={onEquip}
             onUnequip={onUnequip}
             onEngrave={onEngrave}
@@ -573,20 +664,31 @@ function Inventory({
 /** Un objet de l'inventaire, avec ses actions. */
 function ItemRow({
   item,
+  flying,
   onEquip,
   onUnequip,
   onEngrave,
 }: {
   item: ItemView
+  flying: boolean
   onEquip: (itemId: string) => void
   onUnequip: (slot: Slot) => void
   onEngrave: (itemId: string, text: string) => void
 }) {
   const [text, setText] = useState(item.engraving ?? '')
   return (
-    <li data-equipped={item.equipped || undefined}>
+    <motion.li
+      layout
+      data-equipped={item.equipped || undefined}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={SOFT_SPRING}
+    >
       <span>
-        <Entity kind={item.recipe} showLabel />{' '}
+        {/* Même identifiant de mise en page que l'objet de l'enclume : l'icône y vole. */}
+        <motion.span layoutId={flying ? 'anvil-item' : undefined} className="anvil-flight">
+          <Entity kind={item.recipe} showLabel />
+        </motion.span>{' '}
         <span className="quality" data-quality={item.quality}>
           {look(item.quality).label}
         </span>
@@ -620,7 +722,7 @@ function ItemRow({
           </button>
         )}
       </form>
-    </li>
+    </motion.li>
   )
 }
 

@@ -859,3 +859,12 @@ button.secondary { background: rgb(0 0 0 / 0.35); color: var(--ink); border: 1px
 .avatar-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
 .avatar-panels .panel { margin-top: 14px; }
 @media (max-width: 760px) { .avatar-panels { grid-template-columns: 1fr; } }
+
+/* Effets animés par Motion (src/ui/motion.tsx) : les positions sont animées par la
+   bibliothèque, ces règles ne portent que l'apparence. */
+.mfx { position: absolute; width: 0; height: 0; pointer-events: none; z-index: 5; }
+.mfx-ring { position: absolute; left: -45px; top: -45px; width: 90px; height: 90px; border-radius: 50%; border: 3px solid #ffd27a; box-shadow: 0 0 18px #ff9a3d, inset 0 0 12px #ff9a3d; }
+.mfx-spark { position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: radial-gradient(circle, #fff6d0 0%, #ffb84d 70%); box-shadow: 0 0 10px #ffb84d, 0 0 3px #fff; }
+.mfx-float { position: absolute; z-index: 6; white-space: nowrap; pointer-events: none; font-family: var(--title-font); font-weight: 700; font-size: 20px; color: #ffd27a; text-shadow: 0 2px 0 #000, 0 0 12px currentColor; }
+.scene-layer > .mfx, .scene-layer > .mfx-float { pointer-events: none; }
+.anvil-flight { display: inline-flex; }
