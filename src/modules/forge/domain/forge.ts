@@ -81,6 +81,11 @@ export interface ForgeState {
    * confirme plus tard le prélèvement, la Forge doit le rembourser (règle 13).
    */
   abandoned: Record<number, Amounts>
+  /**
+   * Objets fondus, dans l'ordre (règle 14). Ils ne servent plus au jeu, mais leur gravure
+   * reste une donnée personnelle du joueur : elle est exportée avec ses données.
+   */
+  melted: { itemId: string; recipe: RecipeId; quality: Quality; engraving: string | null }[]
 }
 
 export const initialState: ForgeState = {
@@ -92,6 +97,7 @@ export const initialState: ForgeState = {
   refusal: null,
   look: null,
   abandoned: {},
+  melted: [],
 }
 
 // ---------------------------------------------------------------------------
@@ -114,6 +120,7 @@ export type ForgeEvent =
   | { type: 'ItemEquipped'; data: { itemId: string; slot: Slot; at: number } }
   | { type: 'SlotEmptied'; data: { slot: Slot; at: number } }
   | { type: 'ItemEngraved'; data: { itemId: string; text: string; at: number } }
+  | { type: 'ItemMelted'; data: { itemId: string; at: number } }
   | { type: 'CatCustomized'; data: CatLook & { at: number } }
 
 // ---------------------------------------------------------------------------
@@ -129,6 +136,7 @@ export type ForgeCommand =
   | { type: 'EquipItem'; itemId: string }
   | { type: 'UnequipSlot'; slot: Slot }
   | { type: 'EngraveItem'; itemId: string; text: string }
+  | { type: 'MeltItem'; itemId: string }
   | { type: 'CustomizeCat'; look: CatLook }
   // Commande de la saga, issue d'une réponse du Village dans la boîte d'envoi.
   | {
@@ -147,6 +155,7 @@ export type ForgeError =
   | { code: 'NOT_READY'; readyAt: number }
   | { code: 'NOT_CANCELLABLE' }
   | { code: 'NOT_IN_INVENTORY' }
+  | { code: 'ITEM_EQUIPPED' }
   | { code: 'INVALID_ENGRAVING'; max: number }
   | { code: 'INVALID_LOOK' }
 
@@ -280,6 +289,16 @@ export function evolve(state: ForgeState, event: ForgeEvent): ForgeState {
       const { kind, fur, eyes } = event.data
       return { ...state, look: { kind, fur, eyes } }
     }
+    case 'ItemMelted': {
+      const item = state.inventory.find((i) => i.itemId === event.data.itemId)
+      if (!item) return state
+      const { itemId, recipe, quality, engraving } = item
+      return {
+        ...state,
+        inventory: state.inventory.filter((i) => i.itemId !== itemId),
+        melted: [...state.melted, { itemId, recipe, quality, engraving }],
+      }
+    }
   }
 }
 
@@ -378,6 +397,17 @@ export function decide(state: ForgeState, command: ForgeCommand, now: number): D
         return fail({ code: 'INVALID_ENGRAVING', max: ENGRAVING_MAX })
       }
       return accept({ type: 'ItemEngraved', data: { itemId: command.itemId, text, at: now } })
+    }
+
+    case 'MeltItem': {
+      // Règle 14 : seul un objet de l'inventaire, qui n'est pas porté, peut être fondu.
+      // La fonte est définitive, et ne rend aucune ressource.
+      const item = state.inventory.find((i) => i.itemId === command.itemId)
+      if (!item) return fail({ code: 'NOT_IN_INVENTORY' })
+      if (Object.values(state.equipped).includes(item.itemId)) {
+        return fail({ code: 'ITEM_EQUIPPED' })
+      }
+      return accept({ type: 'ItemMelted', data: { itemId: item.itemId, at: now } })
     }
 
     case 'CustomizeCat': {

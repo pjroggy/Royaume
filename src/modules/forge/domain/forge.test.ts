@@ -436,3 +436,41 @@ describe('Règle 13 - paiement sans réponse', () => {
     expect(events.map((e) => e.type)).toEqual(['PaymentAbandoned'])
   })
 })
+
+describe("Règle 14 - fonte d'un objet", () => {
+  const melt = (itemId = 'item-1'): ForgeCommand => ({ type: 'MeltItem', itemId })
+  const engraved = play(collected, {
+    type: 'EngraveItem',
+    itemId: 'item-1',
+    text: 'Valombre',
+  }).state
+
+  it("détruit un objet de l'inventaire, sans rendre aucune ressource", () => {
+    const { state, events, requests } = play(engraved, melt(), T0 + DURATION)
+    expect(events).toEqual([{ type: 'ItemMelted', data: { itemId: 'item-1', at: T0 + DURATION } }])
+    expect(requests).toEqual([])
+    expect(state.inventory).toEqual([])
+    // La gravure de l'objet fondu reste connue, pour l'export des données du joueur.
+    expect(state.melted).toMatchObject([{ itemId: 'item-1', engraving: 'Valombre' }])
+  })
+
+  it("refuse de fondre un objet porté, ou absent de l'inventaire", () => {
+    const worn = play(collected, { type: 'EquipItem', itemId: 'item-1' }).state
+    expect(decide(worn, melt(), T0)).toEqual({ ok: false, error: { code: 'ITEM_EQUIPPED' } })
+    expect(decide(collected, melt('item-9'), T0)).toEqual({
+      ok: false,
+      error: { code: 'NOT_IN_INVENTORY' },
+    })
+  })
+
+  it('libère une place : un inventaire plein permet de nouveau de commander', () => {
+    const recipes = Array.from({ length: INVENTORY_MAX }, () => 'shadowHood')
+    const full = withItems(recipes)
+    expect(decide(full, order(), T0)).toMatchObject({
+      ok: false,
+      error: { code: 'INVENTORY_FULL' },
+    })
+    const freed = play(full, melt(full.inventory[0].itemId)).state
+    expect(decide(freed, order(), T0).ok).toBe(true)
+  })
+})

@@ -61,6 +61,9 @@ export const OrderItemInput = z.object({ recipe: z.string().trim().min(1).max(40
 /** Corps attendu pour équiper un objet de l'inventaire. */
 export const EquipItemInput = z.object({ itemId: z.string().min(1).max(40) })
 
+/** Corps attendu pour fondre un objet de l'inventaire. */
+export const MeltItemInput = z.object({ itemId: z.string().min(1).max(40) })
+
 /** Corps attendu pour vider un emplacement. */
 export const UnequipSlotInput = z.object({ slot: z.enum(SLOTS) })
 

@@ -18,8 +18,12 @@ export type Building = (typeof BUILDINGS)[number]
 /** Niveau de chaque bâtiment (0 : non construit). */
 export type Levels = Record<Building, number>
 
-/** Niveau maximal d'un bâtiment. */
-export const MAX_LEVEL = 10
+/**
+ * Niveau maximal d'un bâtiment. Porté de 10 à 20 après la mise en production de la Forge :
+ * les améliorations de la Forge et ses objets consomment davantage de ressources. Le coût
+ * croissant (règle de COST_EXPONENT) suffit à espacer les derniers niveaux.
+ */
+export const MAX_LEVEL = 20
 
 /**
  * Pour chaque bâtiment : la ressource produite, la production par minute

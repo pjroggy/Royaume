@@ -21,7 +21,7 @@ de Game-icons.net, cités sur la page de chaque icône.
 | GiFishCooked, GiMilkCarton, GiHerbsBundle | Ressources : poisson, lait, herbe à chat |
 | GiFishingBoat, GiCow, GiFlowerPot | Bâtiments : bateau de pêche, ferme, jardin |
 | GiCat, GiPawPrint | Chat chevalier, chaton écuyer |
-| GiRat, GiSkeleton, GiVacuumCleaner, GiDoor | Adversaires et porte du Donjon |
+| GiRat, GiAnimalSkull, GiVacuumCleaner, GiDoor | Adversaires et porte du Donjon |
 | GiVikingHelmet, GiHood, GiBreastplate, GiChestArmor | Casques et armures de la Forge |
 | GiFlamingClaw, GiClaws, GiCape, GiCloak | Armes et capes de la Forge |
 | GiEclipse, GiSunset, GiMoon | Choix du thème : système, crépuscule, nuit |

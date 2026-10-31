@@ -729,7 +729,6 @@
 }
 .tag[data-mine] { color: #ffd08a; }
 .sleeping { opacity: 0.55; filter: saturate(0.6); pointer-events: none; }
-.art-bones svg { filter: grayscale(1) brightness(1.7) sepia(0.25); }
 .stall { position: absolute; }
 .stall-seller { position: absolute; left: 33%; top: 22%; width: 34%; z-index: 0; }
 .stall-seller .cat { width: 100% !important; height: auto !important; }
@@ -868,3 +867,8 @@ button.secondary { background: rgb(0 0 0 / 0.35); color: var(--ink); border: 1px
 .mfx-float { position: absolute; z-index: 6; white-space: nowrap; pointer-events: none; font-family: var(--title-font); font-weight: 700; font-size: 20px; color: #ffd27a; text-shadow: 0 2px 0 #000, 0 0 12px currentColor; }
 .scene-layer > .mfx, .scene-layer > .mfx-float { pointer-events: none; }
 .anvil-flight { display: inline-flex; }
+
+/* Fonte d'un objet : bouton d'action destructrice et fenêtre de confirmation. */
+button.danger:not(.secondary) { background: linear-gradient(180deg, #ff7a5c, #b8321f); color: #fff; border-color: #ff9a80; }
+button.secondary.danger { color: #ff9a80; border-color: rgb(255 120 90 / 0.6); }
+dialog.confirm { width: min(460px, calc(100vw - 32px)); }

@@ -8,6 +8,7 @@ import {
   EngraveItemInput,
   EquipItemInput,
   type ForgeError,
+  MeltItemInput,
   OrderItemInput,
   UnequipSlotInput,
 } from './contracts'
@@ -22,6 +23,7 @@ const STATUS: Record<ForgeError['code'], 400 | 404 | 409> = {
   NOT_READY: 409,
   NOT_CANCELLABLE: 409,
   NOT_IN_INVENTORY: 404,
+  ITEM_EQUIPPED: 409,
   INVALID_ENGRAVING: 400,
   INVALID_LOOK: 400,
 }
@@ -80,6 +82,14 @@ export function createForgeApi(service: ForgeService) {
       // Emplacement vidé.
       .post('/unequip', validateJson(UnequipSlotInput), async (c) => {
         const result = await service.unequip(c.var.userId, c.req.valid('json').slot)
+        return result.ok
+          ? c.json({ view: result.view })
+          : c.json({ error: result.error }, STATUS[result.error.code])
+      })
+
+      // Fonte d'un objet de l'inventaire, qui n'est pas porté : il est détruit.
+      .post('/melt', validateJson(MeltItemInput), async (c) => {
+        const result = await service.melt(c.var.userId, c.req.valid('json').itemId)
         return result.ok
           ? c.json({ view: result.view })
           : c.json({ error: result.error }, STATUS[result.error.code])

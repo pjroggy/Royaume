@@ -115,12 +115,15 @@ export function createForgeService(
     step,
     /** Vue sans distribution de la boîte d'envoi, pour l'export des données personnelles. */
     peek: view,
+    /** Objets fondus du joueur, pour l'export de ses données personnelles (règle 14). */
+    melted: async (playerId: string) => (await repo.load(playerId)).state.melted,
     order: (playerId: string, recipe: string) => execute(playerId, { type: 'OrderItem', recipe }),
     upgrade: (playerId: string) => execute(playerId, { type: 'UpgradeForge' }),
     cancel: (playerId: string) => execute(playerId, { type: 'CancelOrder' }),
     collect: (playerId: string) => execute(playerId, { type: 'CollectItem' }),
     equip: (playerId: string, itemId: string) => execute(playerId, { type: 'EquipItem', itemId }),
     unequip: (playerId: string, slot: Slot) => execute(playerId, { type: 'UnequipSlot', slot }),
+    melt: (playerId: string, itemId: string) => execute(playerId, { type: 'MeltItem', itemId }),
     engrave: (playerId: string, itemId: string, text: string) =>
       execute(playerId, { type: 'EngraveItem', itemId, text }),
     customize: (playerId: string, look: CatLook) =>

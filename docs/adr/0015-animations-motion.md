@@ -1,7 +1,7 @@
 # ADR-0015 - Animations de l'interface par Motion, essayées sur la Forge
 
 - Statut : accepté
-- Date : 2026-10-25
+- Date : 2026-10-31
 
 ## Contexte
 
@@ -91,6 +91,8 @@
   les `@keyframes` remplacés.
 - Si `pnpm build` montre une hausse de taille jugée excessive pour la page de la Forge.
 - Si le jeu s'oriente vers un rendu de type jeu vidéo (Donjon en sprites) : PixiJS.
+Bilan du pilote (2026-10-31) : amélioration jugée légère par l'auteur ; Motion est conservé sur la Forge. 
+PixiJS a été écarté pour ce rendu : l'impression de rendu sommaire tient au dessin des décors plus qu'aux animations, et refaire les graphismes dépasse le périmètre.
 
 ## Usage de l'IA générative
 

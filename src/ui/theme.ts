@@ -13,6 +13,7 @@
  */
 import type { IconType } from 'react-icons'
 import {
+  GiAnimalSkull,
   GiAnvilImpact,
   GiBeerStein,
   GiBreastplate,
@@ -36,7 +37,6 @@ import {
   GiPawPrint,
   GiRat,
   GiShop,
-  GiSkeleton,
   GiTrophyCup,
   GiVacuumCleaner,
   GiVikingHelmet,
@@ -73,7 +73,7 @@ export const theme: Record<string, Look> = {
   hero: { icon: GiCat, label: 'Chat chevalier' },
   companion: { icon: GiPawPrint, label: 'Chaton écuyer' },
   goblin: { icon: GiRat, label: 'Rat' },
-  skeleton: { icon: GiSkeleton, label: 'Chien squelette' },
+  skeleton: { icon: GiAnimalSkull, label: 'Chien squelette' },
   troll: { icon: GiVacuumCleaner, label: "L'Aspirateur" },
   door: { icon: GiDoor, label: 'Porte' },
   // Recettes de la Forge.

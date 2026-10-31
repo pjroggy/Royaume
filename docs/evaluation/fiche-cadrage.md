@@ -58,6 +58,10 @@ progression du joueur, et prépare l'apport de bonus de combat au Donjon (bonus 
     peut être abandonné par le joueur (`NOT_CANCELLABLE` avant ce délai) : la forge est alors
     libre. Si le Village confirme ensuite le prélèvement, la Forge le rembourse, une seule fois.
     Ajoutée le 2026-10-25, après la revue de sécurité (ADR 0014).
+14. **Fonte d'un objet.** Le joueur peut fondre un objet de son inventaire pour libérer sa place.
+    La fonte est définitive et ne rend aucune ressource. Un objet porté doit d'abord être ôté
+    (`ITEM_EQUIPPED`). L'interface demande une confirmation avant la fonte. Ajoutée le
+    2026-10-25 : sans elle, un inventaire plein (règle 3) bloquait définitivement la Forge.
 
 ## Les commandes et les lectures
 
@@ -71,6 +75,7 @@ progression du joueur, et prépare l'apport de bonus de combat au Donjon (bonus 
 | Équiper un objet | Commande `EquipItem` | `POST /api/forge/equip` |
 | Vider un emplacement | Commande `UnequipSlot` | `POST /api/forge/unequip` |
 | Graver un nom sur un objet | Commande `EngraveItem` | `POST /api/forge/engrave` |
+| Fondre un objet de l'inventaire | Commande `MeltItem` | `POST /api/forge/melt` |
 | Choisir l'allure de son chat (page « Mon chat », depuis le château) | Commande `CustomizeCat` | `POST /api/forge/look` |
 | Voir les chats des autres joueurs (Taverne, Donjon) | Lecture | `GET /api/forge/cats?ids=…` |
 | Réponse du Village à un prélèvement | Message `forge.transfer-result` | Boîte d'envoi |

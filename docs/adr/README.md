@@ -20,4 +20,4 @@ un nouvel ADR est rédigé et l'ancien prend le statut « remplacé ».
 | [0012](0012-chat-du-joueur-composition-interface.md) | Le chat du joueur : données dans la Forge, affichage par composition d'interface | Accepté |
 | [0013](0013-icones-game-icons.md) | Icônes Game-icons.net, par react-icons, à la place des émojis | Accepté |
 | [0014](0014-forge-delai-paiement.md) | Délai de réponse du Village et remboursement d'un prélèvement tardif, pour la Forge | Accepté |
-| [0015](0015-animations-motion.md) | Animations de l'interface par Motion, essayées sur la Forge (pilote) | Proposé |
+| [0015](0015-animations-motion.md) | Animations de l'interface par Motion, essayées sur la Forge (pilote) | Accepté |

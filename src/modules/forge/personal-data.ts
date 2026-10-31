@@ -36,6 +36,8 @@ export function createForgePersonalData(service: ForgeService): PersonalDataCont
         })),
         current: view.current,
         look: view.look,
+        // Objets fondus : ils ont quitté l'inventaire, mais leur gravure reste enregistrée.
+        melted: await service.melted(playerId),
       }
     },
 

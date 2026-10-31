@@ -10,9 +10,11 @@ import { ForgeBackdrop, HotMetal } from '@/ui/art/forge-room'
 import { HallBackdrop } from '@/ui/art/hall-of-heroes'
 import { at, Scene } from '@/ui/art/scene'
 import { useFlash } from '@/ui/art/use-flash'
+import { ConfirmDialog } from '@/ui/confirm-dialog'
 import { Entity } from '@/ui/entity'
 import {
   AnimatedNumber,
+  AnimatePresence,
   BOUNCY_SPRING,
   FloatUp,
   Gauge,
@@ -63,6 +65,7 @@ const ERRORS: Record<ApiError['code'], string> = {
   NOT_IN_INVENTORY: "Cet objet n'est pas dans votre inventaire.",
   INVALID_ENGRAVING: `La gravure compte de 1 à ${ENGRAVING_MAX} caractères.`,
   INVALID_LOOK: "Cette allure n'est pas proposée par le jeu.",
+  ITEM_EQUIPPED: "Ôtez d'abord cet objet : un objet porté ne peut pas être fondu.",
 }
 
 /** Libellé affiché pour chaque état de la connexion temps réel. */
@@ -253,6 +256,7 @@ export function ForgeScreen({ userId }: { userId: string }) {
   const cancel = async () => handle(await client.orders.cancel.$post())
   const equip = async (itemId: string) => handle(await client.equip.$post({ json: { itemId } }))
   const unequip = async (slot: Slot) => handle(await client.unequip.$post({ json: { slot } }))
+  const melt = async (itemId: string) => handle(await client.melt.$post({ json: { itemId } }))
   const engrave = async (itemId: string, text: string) =>
     handle(await client.engrave.$post({ json: { itemId, text } }))
 
@@ -352,6 +356,7 @@ export function ForgeScreen({ userId }: { userId: string }) {
         onEquip={equip}
         onUnequip={unequip}
         onEngrave={engrave}
+        onMelt={melt}
       />
     </MotionRoot>
   )
@@ -600,6 +605,7 @@ function Inventory({
   onEquip,
   onUnequip,
   onEngrave,
+  onMelt,
 }: {
   view: ForgeView
   /** Objet qui vient d'être retiré de l'enclume : son icône y arrive en vol. */
@@ -607,7 +613,10 @@ function Inventory({
   onEquip: (itemId: string) => void
   onUnequip: (slot: Slot) => void
   onEngrave: (itemId: string, text: string) => void
+  onMelt: (itemId: string) => void
 }) {
+  // Objet dont la fonte attend la confirmation du joueur (règle 14).
+  const [melting, setMelting] = useState<ItemView | null>(null)
   return (
     <section className="panel" aria-label="Inventaire">
       <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -646,17 +655,53 @@ function Inventory({
         <p className="muted">Aucun objet pour le moment : forgez-en un !</p>
       )}
       <ul className="items">
-        {view.inventory.map((item) => (
-          <ItemRow
-            key={item.itemId}
-            item={item}
-            flying={item.itemId === flight}
-            onEquip={onEquip}
-            onUnequip={onUnequip}
-            onEngrave={onEngrave}
-          />
-        ))}
+        {/* Un objet fondu sort de la liste en rougeoyant ; les suivants remontent. */}
+        <AnimatePresence mode="popLayout" initial={false}>
+          {view.inventory.map((item) => (
+            <ItemRow
+              key={item.itemId}
+              item={item}
+              flying={item.itemId === flight}
+              onEquip={onEquip}
+              onUnequip={onUnequip}
+              onEngrave={onEngrave}
+              onMelt={() => setMelting(item)}
+            />
+          ))}
+        </AnimatePresence>
       </ul>
+      <ConfirmDialog
+        open={melting !== null}
+        title="Fondre cet objet ?"
+        confirmLabel="Fondre définitivement"
+        onCancel={() => setMelting(null)}
+        onConfirm={() => {
+          if (melting) onMelt(melting.itemId)
+          setMelting(null)
+        }}
+      >
+        {melting && (
+          <>
+            <p>
+              <Entity kind={melting.recipe} showLabel />{' '}
+              <span className="quality" data-quality={melting.quality}>
+                {look(melting.quality).label}
+              </span>
+              {melting.engraving && <em className="engraving"> « {melting.engraving} »</em>}
+            </p>
+            <p>
+              L'objet sera <strong>détruit définitivement</strong>, sans aucune ressource rendue
+              {melting.engraving ? ', et sa gravure disparaîtra avec lui' : ''}.
+            </p>
+            {(melting.quality === 'epic' || melting.quality === 'legendary') && (
+              <p className="error">
+                Attention : c'est un objet {look(melting.quality).label}, parmi les plus rares de la
+                forge.
+              </p>
+            )}
+          </>
+        )}
+      </ConfirmDialog>
     </section>
   )
 }
@@ -668,12 +713,15 @@ function ItemRow({
   onEquip,
   onUnequip,
   onEngrave,
+  onMelt,
 }: {
   item: ItemView
   flying: boolean
   onEquip: (itemId: string) => void
   onUnequip: (slot: Slot) => void
   onEngrave: (itemId: string, text: string) => void
+  /** Demande la fonte de l'objet ; la confirmation est demandée par l'inventaire. */
+  onMelt: () => void
 }) {
   const [text, setText] = useState(item.engraving ?? '')
   return (
@@ -682,6 +730,7 @@ function ItemRow({
       data-equipped={item.equipped || undefined}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.85, backgroundColor: 'rgba(255, 90, 40, 0.35)' }}
       transition={SOFT_SPRING}
     >
       <span>
@@ -721,6 +770,15 @@ function ItemRow({
             Équiper
           </button>
         )}
+        <button
+          type="button"
+          className="secondary danger"
+          disabled={item.equipped}
+          title={item.equipped ? "Ôtez l'objet avant de le fondre" : undefined}
+          onClick={onMelt}
+        >
+          Fondre
+        </button>
       </form>
     </motion.li>
   )

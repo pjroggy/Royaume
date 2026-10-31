@@ -209,205 +209,257 @@ export function RatSprite() {
   )
 }
 
-/** Chien squelette (adversaire « skeleton ») : le rat pillard, en os blanchis. */
+/**
+ * Chien squelette (adversaire « skeleton ») : un chien de garde mort-vivant, de profil, tourné
+ * vers les héros. Os blanchis, collier clouté et regard spectral vert, pour le distinguer
+ * nettement du rat.
+ */
 export function SkeletonSprite() {
   const u = useUid()
   return (
-    <span className="art-bones">
-      <svg
-        viewBox="0 0 160 170"
-        width="100%"
-        className="rat"
-        aria-hidden="true"
-        focusable="false"
-        style={{ overflow: 'visible' }}
-      >
-        <defs>
-          <radialGradient id={`${u}-fur`} cx="38%" cy="30%" r="80%">
-            <stop offset="0%" stopColor="#857c8c" />
-            <stop offset="60%" stopColor="#4e4856" />
-            <stop offset="100%" stopColor="#1e1a24" />
-          </radialGradient>
-          <radialGradient id={`${u}-ear`} cx="50%" cy="55%" r="60%">
-            <stop offset="0%" stopColor="#f2a6b4" />
-            <stop offset="100%" stopColor="#8a4a58" />
-          </radialGradient>
-          <linearGradient id={`${u}-tail`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#7a4a54" />
-            <stop offset="100%" stopColor="#e4a2ae" />
-          </linearGradient>
-          <linearGradient id={`${u}-leather`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#7a4e30" />
-            <stop offset="100%" stopColor="#3a2212" />
-          </linearGradient>
-          <linearGradient id={`${u}-blade`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#f4f2fa" />
-            <stop offset="50%" stopColor="#a8a4b8" />
-            <stop offset="100%" stopColor="#5a5668" />
-          </linearGradient>
-          <linearGradient id={`${u}-shaft`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#8a5a36" />
-            <stop offset="100%" stopColor="#3a2212" />
-          </linearGradient>
-          <radialGradient id={`${u}-eye`} cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#fff0a0" />
-            <stop offset="40%" stopColor="#ff3b2b" />
-            <stop offset="100%" stopColor="#ff3b2b" stopOpacity="0" />
-          </radialGradient>
-          <filter id={`${u}-sh`} x="-30%" y="-100%" width="160%" height="300%">
-            <feGaussianBlur stdDeviation="3" />
-          </filter>
-        </defs>
-        <ellipse
-          cx="82"
-          cy="160"
-          rx="50"
-          ry="7"
-          fill="#000"
-          opacity="0.55"
-          filter={`url(#${u}-sh)`}
-        />
-        <path
-          className="rtail"
-          d="M54 146 C 26 156, 4 150, 6 130 C 8 116, 20 108, 30 112"
-          fill="none"
-          stroke={`url(#${u}-tail)`}
-          strokeWidth="6"
-          strokeLinecap="round"
-          style={{ animationDelay: '-0.8s' }}
-        />
-        <path
-          d="M54 146 C 26 156, 4 150, 6 130 C 8 116, 20 108, 30 112"
-          fill="none"
-          stroke="#3a1a22"
-          strokeWidth="6"
-          strokeDasharray="1 5"
-          opacity="0.4"
-        />
-        <path
-          d="M48 156 C 38 128, 44 98, 62 86 L 58 80 L 66 82 L 64 74 L 72 80 L 82 74 L 92 80 L 100 74 L 100 82 L 108 80 L 104 88 C 122 100, 126 130, 116 156 Z"
-          fill={`url(#${u}-fur)`}
-          stroke="#0b0810"
-          strokeWidth="3"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M64 140 C 70 112, 94 112, 100 140 C 94 150, 70 150, 64 140 Z"
-          fill="#857c8c"
-          opacity="0.35"
-        />
-        <path
-          d="M56 118 C 66 106, 98 106, 110 118 L 112 146 C 98 156, 68 156, 54 146 Z"
-          fill={`url(#${u}-leather)`}
-          stroke="#120a06"
-          strokeWidth="2.5"
-        />
-        <path d="M60 112 L 104 150 M104 112 L 92 120" stroke="#2a1a10" strokeWidth="5" />
-        <rect
-          x="74"
-          y="122"
-          width="10"
-          height="8"
-          rx="1"
-          fill="#8a7f6a"
-          stroke="#1a1410"
-          strokeWidth="1.5"
-        />
-        <path
-          d="M58 156 C 56 148, 66 146, 70 154 Z M96 154 C 100 146, 110 148, 108 156 Z"
-          fill={`url(#${u}-fur)`}
-          stroke="#0b0810"
-          strokeWidth="2"
-        />
-        <path
-          d="M58 156 l -3 4 M62 157 l 0 4 M66 156 l 3 4 M100 156 l -3 4 M104 157 l 0 4 M108 156 l 3 4"
-          stroke="#e6d6c0"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M48 46 C 36 34, 40 14, 58 18 C 70 22, 72 40, 64 52 Z"
-          fill={`url(#${u}-fur)`}
-          stroke="#0b0810"
-          strokeWidth="2.5"
-        />
-        <path d="M52 42 C 46 34, 48 24, 58 25 C 66 28, 66 38, 62 46 Z" fill={`url(#${u}-ear)`} />
-        <path
-          d="M116 46 C 128 34, 124 14, 106 18 C 94 22, 92 40, 100 52 Z"
-          fill={`url(#${u}-fur)`}
-          stroke="#0b0810"
-          strokeWidth="2.5"
-        />
-        <path
-          d="M112 42 C 118 34, 116 24, 106 25 C 98 28, 98 38, 102 46 Z"
-          fill={`url(#${u}-ear)`}
-        />
-        <path
-          d="M54 66 C 50 48, 66 40, 82 40 C 98 40, 114 48, 110 66 C 108 78, 96 88, 90 98 C 86 104, 78 104, 74 98 C 68 88, 56 78, 54 66 Z"
-          fill={`url(#${u}-fur)`}
-          stroke="#0b0810"
-          strokeWidth="3"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M70 84 C 74 96, 90 96, 94 84 C 90 92, 74 92, 70 84 Z"
-          fill="#1e1a24"
-          opacity="0.6"
-        />
-        <path
-          d="M60 62 l -6 -6 M104 62 l 6 -6 M64 56 l -4 -8 M100 56 l 4 -8"
-          stroke="#1e1a24"
-          strokeWidth="2"
-          strokeLinecap="round"
-        />
-        <path
-          d="M57 66 C 70 60, 96 60, 109 66 L 106 78 C 94 74, 72 74, 60 78 Z"
-          fill="#1a1420"
-          opacity="0.92"
-        />
-        <circle cx="70" cy="70" r="9" fill={`url(#${u}-eye)`} className="flicker" />
-        <circle cx="94" cy="70" r="9" fill={`url(#${u}-eye)`} className="flicker" />
-        <ellipse cx="70" cy="70" rx="4" ry="3.4" fill="#2a0404" />
-        <ellipse cx="94" cy="70" rx="4" ry="3.4" fill="#2a0404" />
-        <circle cx="71.5" cy="68.5" r="1.4" fill="#ffd0c0" />
-        <circle cx="95.5" cy="68.5" r="1.4" fill="#ffd0c0" />
-        <path
-          d="M65 64 L 76 67 M99 64 L 88 67"
-          stroke="#0b0810"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-        />
-        <path
-          d="M76 100 C 78 96, 86 96, 88 100 C 86 104, 78 104, 76 100 Z"
-          fill="#e48a9a"
-          stroke="#3a1420"
-          strokeWidth="1.5"
-        />
-        <path
-          d="M79 104 l 1 5 l 2 -4 l 2 4 l 1 -5"
-          fill="#f4eee0"
-          stroke="#3a3020"
-          strokeWidth="0.8"
-        />
-        <g stroke="#e6dccb" strokeWidth="1" opacity="0.8" fill="none">
-          <path d="M74 98 Q 56 94 40 96 M74 100 Q 58 102 44 108 M90 98 Q 108 94 124 96 M90 100 Q 106 102 120 108" />
+    <svg
+      viewBox="0 0 160 170"
+      width="100%"
+      className="rat"
+      aria-hidden="true"
+      focusable="false"
+      style={{ overflow: 'visible' }}
+    >
+      <defs>
+        <linearGradient id={`${u}-bone`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#fbf4e2" />
+          <stop offset="60%" stopColor="#d9ccb0" />
+          <stop offset="100%" stopColor="#a8987a" />
+        </linearGradient>
+        <radialGradient id={`${u}-eye`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#eaffd0" />
+          <stop offset="40%" stopColor="#7cf05a" />
+          <stop offset="100%" stopColor="#7cf05a" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id={`${u}-aura`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#7cf05a" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#7cf05a" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id={`${u}-leather`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#7a2a2a" />
+          <stop offset="100%" stopColor="#3a1010" />
+        </linearGradient>
+        <filter id={`${u}-sh`} x="-30%" y="-100%" width="160%" height="300%">
+          <feGaussianBlur stdDeviation="3" />
+        </filter>
+      </defs>
+      <ellipse
+        cx="86"
+        cy="161"
+        rx="60"
+        ry="7"
+        fill="#000"
+        opacity="0.55"
+        filter={`url(#${u}-sh)`}
+      />
+      <ellipse cx="80" cy="100" rx="78" ry="62" fill={`url(#${u}-aura)`} />
+      {/* queue : vertèbres de plus en plus petites */}
+      <g className="rtail" style={{ transformOrigin: '0% 100%' }}>
+        <g fill={`url(#${u}-bone)`} stroke="#2a2218" strokeWidth="1.5">
+          <circle cx="132" cy="90" r="4.2" />
+          <circle cx="139" cy="84" r="3.8" />
+          <circle cx="145" cy="77" r="3.4" />
+          <circle cx="149" cy="69" r="3" />
+          <circle cx="151" cy="61" r="2.6" />
+          <circle cx="151" cy="54" r="2.2" />
         </g>
-
+      </g>
+      {/* pattes arrière (derrière le corps) */}
+      <g stroke="#2a2218" strokeWidth="2" fill={`url(#${u}-bone)`}>
         <path
-          d="M118 92 L 124 86 L 152 52 C 156 50, 158 52, 156 56 L 128 92 Z"
-          fill={`url(#${u}-blade)`}
-          stroke="#1a1620"
-          strokeWidth="1.5"
+          d="M118 102 L 124 128 L 118 156"
+          fill="none"
+          stroke="#a8987a"
+          strokeWidth="6"
+          strokeLinecap="round"
         />
-        <path d="M112 90 L 128 104" stroke="#3b2316" strokeWidth="6" strokeLinecap="round" />
+        <ellipse cx="114" cy="157" rx="8" ry="3.5" />
         <path
-          d="M114 100 C 108 92, 122 86, 126 96 C 128 104, 118 108, 114 100 Z"
-          fill={`url(#${u}-fur)`}
-          stroke="#0b0810"
+          d="M58 104 L 54 130 L 52 156"
+          fill="none"
+          stroke="#a8987a"
+          strokeWidth="6"
+          strokeLinecap="round"
+        />
+        <ellipse cx="47" cy="157" rx="8" ry="3.5" />
+      </g>
+      {/* côtes */}
+      <g fill="none" strokeLinecap="round">
+        <g stroke="#2a2218" strokeWidth="7">
+          <path d="M66 86 C 58 100, 62 116, 72 122" />
+          <path d="M76 86 C 68 102, 72 120, 82 126" />
+          <path d="M86 87 C 80 104, 84 120, 92 126" />
+          <path d="M96 88 C 92 104, 95 118, 101 122" />
+        </g>
+        <g stroke={`url(#${u}-bone)`} strokeWidth="4.5">
+          <path d="M66 86 C 58 100, 62 116, 72 122" />
+          <path d="M76 86 C 68 102, 72 120, 82 126" />
+          <path d="M86 87 C 80 104, 84 120, 92 126" />
+          <path d="M96 88 C 92 104, 95 118, 101 122" />
+        </g>
+      </g>
+      {/* sternum */}
+      <path
+        d="M70 124 C 80 130, 92 130, 102 122"
+        fill="none"
+        stroke="#2a2218"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M70 124 C 80 130, 92 130, 102 122"
+        fill="none"
+        stroke="#d9ccb0"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      {/* colonne vertébrale */}
+      <g fill={`url(#${u}-bone)`} stroke="#2a2218" strokeWidth="1.6">
+        <rect x="52" y="78" width="9" height="9" rx="3" />
+        <rect x="62" y="80" width="9" height="9" rx="3" />
+        <rect x="72" y="81" width="9" height="9" rx="3" />
+        <rect x="82" y="82" width="9" height="9" rx="3" />
+        <rect x="92" y="83" width="9" height="9" rx="3" />
+        <rect x="102" y="84" width="9" height="9" rx="3" />
+        <rect x="112" y="85" width="9" height="9" rx="3" />
+      </g>
+      {/* bassin */}
+      <path
+        d="M110 86 C 124 80, 134 86, 132 96 C 130 104, 120 106, 112 102 Z"
+        fill={`url(#${u}-bone)`}
+        stroke="#2a2218"
+        strokeWidth="2"
+      />
+      <circle cx="122" cy="95" r="3.2" fill="#2a2218" />
+      {/* pattes avant (devant) */}
+      <g>
+        <path
+          d="M128 100 L 134 128 L 128 156"
+          fill="none"
+          stroke="#2a2218"
+          strokeWidth="8"
+          strokeLinecap="round"
+        />
+        <path
+          d="M128 100 L 134 128 L 128 156"
+          fill="none"
+          stroke={`url(#${u}-bone)`}
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+        <circle cx="134" cy="128" r="4.5" fill="#efe6d0" stroke="#2a2218" strokeWidth="1.5" />
+        <ellipse
+          cx="124"
+          cy="157"
+          rx="9"
+          ry="4"
+          fill={`url(#${u}-bone)`}
+          stroke="#2a2218"
           strokeWidth="2"
         />
-      </svg>
-    </span>
+        <path
+          d="M64 100 L 62 128 L 64 156"
+          fill="none"
+          stroke="#2a2218"
+          strokeWidth="8"
+          strokeLinecap="round"
+        />
+        <path
+          d="M64 100 L 62 128 L 64 156"
+          fill="none"
+          stroke={`url(#${u}-bone)`}
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+        <circle cx="62" cy="128" r="4.5" fill="#efe6d0" stroke="#2a2218" strokeWidth="1.5" />
+        <ellipse
+          cx="58"
+          cy="157"
+          rx="9"
+          ry="4"
+          fill={`url(#${u}-bone)`}
+          stroke="#2a2218"
+          strokeWidth="2"
+        />
+        <circle cx="64" cy="100" r="6" fill="#efe6d0" stroke="#2a2218" strokeWidth="1.8" />
+      </g>
+      {/* cou */}
+      <g fill={`url(#${u}-bone)`} stroke="#2a2218" strokeWidth="1.5">
+        <rect x="44" y="70" width="9" height="9" rx="3" transform="rotate(-25 48 74)" />
+        <rect x="38" y="62" width="9" height="9" rx="3" transform="rotate(-35 42 66)" />
+      </g>
+      {/* collier clouté */}
+      <path
+        d="M33 60 C 40 70, 52 76, 58 74 L 55 82 C 46 84, 34 76, 28 66 Z"
+        fill={`url(#${u}-leather)`}
+        stroke="#140606"
+        strokeWidth="2"
+      />
+      <g fill="#d4c06a" stroke="#4a3a10" strokeWidth="0.8">
+        <circle cx="36" cy="70" r="2" />
+        <circle cx="44" cy="76" r="2" />
+        <circle cx="52" cy="79" r="2" />
+      </g>
+      {/* crâne */}
+      <path
+        d="M30 22 L 36 6 L 44 24 Z"
+        fill={`url(#${u}-bone)`}
+        stroke="#2a2218"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M42 24 L 52 10 L 54 30 Z"
+        fill={`url(#${u}-bone)`}
+        stroke="#2a2218"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M22 34 C 24 18, 48 14, 58 28 C 64 38, 60 52, 50 58 L 14 64 C 2 64, -4 56, 2 50 L 18 44 Z"
+        fill={`url(#${u}-bone)`}
+        stroke="#2a2218"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+      />
+      {/* mâchoire inférieure, entrouverte */}
+      <path
+        d="M6 64 L 44 60 C 48 66, 44 72, 36 72 L 10 72 C 4 72, 2 66, 6 64 Z"
+        fill={`url(#${u}-bone)`}
+        stroke="#2a2218"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+      {/* crocs */}
+      <g fill="#fffaf0" stroke="#2a2218" strokeWidth="1">
+        <path d="M8 62 l 2 6 l 2 -6 Z" />
+        <path d="M15 61 l 1.5 5 l 1.5 -5 Z" />
+        <path d="M22 60 l 1.5 5 l 1.5 -5 Z" />
+        <path d="M29 59 l 1.5 5 l 1.5 -5 Z" />
+        <path d="M10 66 l 2 -5 l 2 5 Z" />
+        <path d="M24 65 l 1.5 -4 l 1.5 4 Z" />
+      </g>
+      {/* truffe (cavité nasale) et sutures */}
+      <path d="M2 50 C 4 46, 10 46, 10 50 C 8 54, 4 54, 2 50 Z" fill="#2a2218" />
+      <path
+        d="M26 30 C 32 34, 34 40, 30 46 M46 22 C 48 28, 52 30, 56 30"
+        fill="none"
+        stroke="#8a7a5a"
+        strokeWidth="1.2"
+      />
+      {/* orbite et œil spectral */}
+      <path
+        d="M30 36 C 36 30, 46 32, 46 40 C 46 46, 38 48, 33 45 C 29 43, 28 39, 30 36 Z"
+        fill="#14100c"
+      />
+      <circle className="flicker" cx="38" cy="40" r="9" fill={`url(#${u}-eye)`} />
+      <circle cx="38" cy="40" r="2.6" fill="#eaffd0" />
+    </svg>
   )
 }
 

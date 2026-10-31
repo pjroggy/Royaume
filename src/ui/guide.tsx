@@ -50,7 +50,7 @@ const PAGES: GuidePage[] = [
           Chaque ressource vient d'un bâtiment : le <Entity kind="sawmill" showLabel />, la{' '}
           <Entity kind="quarry" showLabel /> et le <Entity kind="mine" showLabel />, qu'il faut
           d'abord construire. Cliquez sur un bâtiment de la carte pour l'améliorer : chaque niveau
-          augmente sa production, et coûte un peu plus cher que le précédent (niveau 10 au plus).
+          augmente sa production, et coûte un peu plus cher que le précédent (niveau 20 au plus).
         </p>
       </>
     ),

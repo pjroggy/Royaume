@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { MAX_LEVEL } from './catalog'
 import {
   decide,
   initialState,
@@ -98,7 +99,7 @@ describe('Village - amélioration', () => {
   it('refuse une amélioration au-delà du niveau maximal', () => {
     const atMax: VillageEvent = {
       type: 'BuildingUpgraded',
-      data: { building: 'sawmill', toLevel: 10, cost: {}, at: T0 },
+      data: { building: 'sawmill', toLevel: MAX_LEVEL, cost: {}, at: T0 },
     }
     const decision = decide(
       replay([founded, atMax]),

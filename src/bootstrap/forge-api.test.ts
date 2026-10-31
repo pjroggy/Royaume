@@ -221,6 +221,36 @@ describe('API du module Forge - fabrication, retrait, équipement et gravure', (
   })
 })
 
+describe('API du module Forge - fonte des objets', () => {
+  it("fond un objet ôté, refuse un objet porté (409), et exporte la gravure de l'objet fondu", async () => {
+    const api = await forgeWithVillages()
+    await aliceHasAHelm(api)
+    await api.post('/api/forge/engrave', { itemId: 'item-1', text: 'Valombre' })
+    await api.post('/api/forge/equip', { itemId: 'item-1' })
+
+    const worn = await api.post('/api/forge/melt', { itemId: 'item-1' })
+    expect(worn.status).toBe(409)
+    expect(await worn.json()).toEqual({ error: { code: 'ITEM_EQUIPPED' } })
+
+    await api.post('/api/forge/unequip', { slot: 'helmet' })
+    // L'horloge est figée : seule la fonte pourrait modifier le stock entre les deux lectures.
+    const before = await stockOf(api)
+    const melted = await viewOf(await api.post('/api/forge/melt', { itemId: 'item-1' }))
+    expect(melted.inventory).toEqual([])
+    // Aucune ressource n'est rendue : le stock est inchangé.
+    expect(await stockOf(api)).toEqual(before)
+
+    const exported = await (await api.get('/api/account/export')).json()
+    expect(exported.sections.forge.melted).toMatchObject([{ engraving: 'Valombre' }])
+  })
+
+  it("refuse la fonte d'un objet absent (404), ou d'une entrée invalide (400)", async () => {
+    const api = await forgeWithVillages()
+    expect((await api.post('/api/forge/melt', { itemId: 'item-9' })).status).toBe(404)
+    expect((await api.post('/api/forge/melt', {})).status).toBe(400)
+  })
+})
+
 describe('API du module Forge - allure du chat et lecture par les autres modules', () => {
   const look = { kind: 'kitten', fur: '#efdcb8', eyes: '#7cc8ff' }
 
