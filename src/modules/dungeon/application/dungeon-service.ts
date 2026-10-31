@@ -1,5 +1,11 @@
 import { withOptimisticRetry } from '@/platform/event-store/retry'
-import { DEFAULT_DIFFICULTY, type Difficulty, MAX_HEROES } from '../domain/content'
+import {
+  DEFAULT_DIFFICULTY,
+  type Difficulty,
+  type HeroGear,
+  MAX_HEROES,
+  NO_GEAR,
+} from '../domain/content'
 import { decide, type GameCommand, type GameError } from '../domain/rules'
 import { type GameView, toView } from '../domain/view'
 import type { GameRepository } from './game-repository'
@@ -22,6 +28,11 @@ export interface DungeonServiceOptions {
   newId?: () => string
   /** Graine d'une nouvelle expédition ; un entier aléatoire sur 32 bits par défaut. */
   newSeed?: () => number
+  /**
+   * Port vers l'équipement des joueurs (bonus B6, ADR 0016) : la racine de composition le relie
+   * à la Forge. Le Donjon n'importe pas la Forge ; sans équipement fourni, aucun bonus.
+   */
+  gearOf?: (playerId: string) => Promise<HeroGear>
 }
 
 /**
@@ -36,6 +47,7 @@ export function createDungeonService(
     clock = () => Date.now(),
     newId = () => crypto.randomUUID(),
     newSeed = () => crypto.getRandomValues(new Uint32Array(1))[0],
+    gearOf = async () => NO_GEAR,
   }: DungeonServiceOptions = {},
 ) {
   /**
@@ -69,8 +81,19 @@ export function createDungeonService(
       name: player.name,
       difficulty,
       seed: newSeed(),
+      gear: await gearOf(player.id),
     })
     return { gameId, result }
+  }
+
+  /** Fait entrer le joueur dans une expédition, avec l'équipement que porte son chat. */
+  async function join(gameId: string, player: { id: string; name: string }) {
+    return execute(gameId, player.id, {
+      type: 'JoinGame',
+      playerId: player.id,
+      name: player.name,
+      gear: await gearOf(player.id),
+    })
   }
 
   /** Vue d'une expédition pour un joueur ; null si elle n'existe pas. */
@@ -84,7 +107,7 @@ export function createDungeonService(
     return openGames.list(clock())
   }
 
-  return { execute, create, getView, listOpenGames }
+  return { execute, create, join, getView, listOpenGames }
 }
 
 /** Type du service, déduit de sa fabrique : utilisé par l'API du module. */

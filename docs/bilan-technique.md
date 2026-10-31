@@ -15,7 +15,7 @@ revues. Il s'adresse à la personne qui reprendrait le projet.
 | Modules métier | 5 : `realm`, `dungeon`, `market`, `ranking`, `tavern` (et `system`, technique) | 6 : ajout de `forge` |
 | Briques de la plateforme | 9 : `auth`, `cron`, `db`, `event-store`, `http`, `outbox`, `privacy`, `projection`, `realtime` | 9, inchangées |
 | Lignes de code, hors tests | Environ 8 260 (`src` et `app`), dont 82 pour le service Village extrait | Environ 17 900, dont environ 6 200 pour l'interface partagée `src/ui` (habillage graphique, icônes, guide) et 1 950 pour la Forge |
-| Fichiers de test, nombre de tests | 37 fichiers, 300 tests, tous réussis (`pnpm test:coverage`, 2026-10-31) |
+| Fichiers de test, nombre de tests | 40 fichiers, 309 tests, tous réussis (pnpm test:coverage, 2026-10-31) |
 | Commits | 80 à la fin du TD11, tous conformes à Conventional Commits | 102, tous conformes à Conventional Commits |
 | Hébergement | Vercel (Francfort), base Neon (Francfort) | Inchangé |
 
@@ -49,16 +49,17 @@ revues. Il s'adresse à la personne qui reprendrait le projet.
 | 0013 | Icônes Game-icons.net à la place des émojis | Remplacement de toutes les icônes | A tenu : seuls trois fichiers de `src/ui` ont changé, ce qui confirme la couche de thème (ADR 0002). Trop récente pour juger son coût d'entretien. |
 | 0014 | Délai de réponse du Village et remboursement d'un prélèvement tardif | Panne simulée du service Village pendant un paiement (test de l'API) | A tenu : la forge est libérée, et le prélèvement confirmé après l'abandon est remboursé une fois. Prix : un événement et un état de plus, et un remboursement qui reste sans accusé (DT-016). |
 | 0015 | Animations de l'interface par Motion, essayées sur la Forge | Pilote sur l'écran de la Forge (vol d'objet, ressorts, étincelles) | Tenu, à portée limitée : amélioration jugée légère par l'auteur. Le pilote a montré que l'impression de rendu sommaire tient au dessin plus qu'aux animations ; PixiJS a été écarté pour ce rendu. |
+| 0016 | L'équipement de la Forge renforce les héros du Donjon, par un port | Test de bout en bout de l'API : héros équipé et héros sans équipement dans la même expédition | A tenu : deux modules reliés sans dépendance entre eux. Prix : une lecture de la forge à chaque entrée dans une expédition, et un équilibre au niveau difficile à mesurer de nouveau. |
 
 ## 3. La qualité
 
 | Caractéristique | Indicateur | Valeur | Appréciation |
 | --- | --- | --- | --- |
-| Adéquation fonctionnelle | Tests réussis ; couverture des domaines | `td11-fin` : 232 tests sur 232, 75 % des lignes. `eval-fin` : 300 tests sur 300, 64,96 % des lignes (63,53 % des instructions, 50,45 % des branches) | Satisfaisante pour le serveur : les quatorze règles de la Forge ont chacune leur rubrique de test, et ses onze routes leurs tests de l'API. La baisse de la couverture vient du code d'interface ajouté sans test (habillage graphique, interface de la Forge), mesuré par `pnpm test:coverage` comme le reste de `src/`. |
+| Adéquation fonctionnelle | Tests réussis ; couverture des domaines | `td11-fin` : 232 tests sur 232, 75 % des lignes. `eval-fin` : 309 tests sur 309, 64,48 % des lignes (63,09 % des instructions, 49,56 % des branches) | Satisfaisante pour le serveur : les quatorze règles de la Forge ont chacune leur rubrique de test, et ses onze routes leurs tests de l'API. La baisse de la couverture vient du code d'interface ajouté sans test (habillage graphique, interface de la Forge), mesuré par `pnpm test:coverage` comme le reste de `src/`. |
 | Efficacité des performances | Débit et p99 des lectures ; respect du budget | p99 entre 79 et 138 ms pour 20 connexions, 0 erreur (`perf/apres.json`) ; budget de 500 ms respecté | Satisfaisante en local. Après l'optimisation des projections, le débit passe de 216 à 295 requêtes/s pour les expéditions ouvertes et de 155 à 224 pour le Marché (`perf/avant.json`). La mesure locale ne prédit pas la production. |
 | Fiabilité | Tests de concurrence, de reprise et d'idempotence ; messages abandonnés | Concurrence (journal, Donjon, Marché), reprise après panne, doublons de messages : testés ; lettres mortes examinables (`scripts/dead-letters.ts`) | Satisfaisante. |
 | Sécurité | Exigences des revues de sécurité | `td11-fin` : 37 conformes et 3 en risque accepté, sur 40. `eval-fin` : 50 conformes et 5 en risque accepté, sur 55 | La seule non-conformité trouvée par la revue de la Forge (F13, forge bloquée par un prélèvement abandonné) a été corrigée et testée (ADR 0014). |
-| Maintenabilité | Règles d'architecture ; fonctions d'aptitude ; couverture | 0 violation de dependency-cruiser, à `td11-fin` comme à `eval-fin`, sans modification de la configuration ; 2 fonctions d'aptitude, que la Forge respecte ; 65 % des lignes couvertes | Bonne pour le serveur. L'interface (`ui.tsx`, `src/ui/`) n'est couverte par aucun test automatique, alors qu'elle porte désormais le chat de la Forge dans quatre modules (ADR 0012) : une régression ne serait détectée qu'à la main. |
+| Maintenabilité | Règles d'architecture ; fonctions d'aptitude ; couverture | 0 violation de dependency-cruiser, à `td11-fin` comme à `eval-fin`, sans modification de la configuration ; 2 fonctions d'aptitude, que la Forge respecte ; 64 % des lignes couvertes | Bonne pour le serveur. L'interface (`ui.tsx`, `src/ui/`) n'est couverte par aucun test automatique, alors qu'elle porte désormais le chat de la Forge dans quatre modules (ADR 0012) : une régression ne serait détectée qu'à la main. |
 | Flexibilité | Extraction d'un module ; changement de base entre local et production | Village extrait (ADR 0009) ; PGlite en local, Neon en production, choisi par `DATABASE_URL` | Démontrée. |
 
 ## 4. La dette technique

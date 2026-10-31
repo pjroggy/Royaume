@@ -21,3 +21,4 @@ un nouvel ADR est rédigé et l'ancien prend le statut « remplacé ».
 | [0013](0013-icones-game-icons.md) | Icônes Game-icons.net, par react-icons, à la place des émojis | Accepté |
 | [0014](0014-forge-delai-paiement.md) | Délai de réponse du Village et remboursement d'un prélèvement tardif, pour la Forge | Accepté |
 | [0015](0015-animations-motion.md) | Animations de l'interface par Motion, essayées sur la Forge (pilote) | Accepté |
+| [0016](0016-equipement-donjon.md) | L'équipement de la Forge renforce les héros du Donjon, par un port relié à la racine de composition | Accepté |

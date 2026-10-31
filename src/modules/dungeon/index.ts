@@ -9,7 +9,7 @@ import type { ProjectionRunner } from '@/platform/projection/projection'
 import type { ChannelPolicy } from '@/platform/realtime/channel-policy'
 import { createDungeonApi } from './api'
 import { createDungeonService } from './application/dungeon-service'
-import { GAME_CHANNEL_PREFIX } from './contracts'
+import { GAME_CHANNEL_PREFIX, type HeroGear } from './contracts'
 import { createDrizzleOpenGamesReader } from './infrastructure/drizzle-open-games-reader'
 import { createEventStoreGameRepository } from './infrastructure/event-store-game-repository'
 import { createDungeonPersonalData } from './personal-data'
@@ -23,13 +23,15 @@ export interface DungeonModuleDeps {
   projections: ProjectionRunner
   /** Horloge de référence ; l'heure réelle par défaut. */
   clock?: () => number
+  /** Équipement porté par le chat d'un joueur, fourni par la Forge (bonus B6) ; aucun sinon. */
+  gearOf?: (playerId: string) => Promise<HeroGear>
 }
 
 /** Fabrique du module : assemble les adaptateurs, le service, l'API et la règle des canaux. */
-export function createDungeonModule({ store, db, projections, clock }: DungeonModuleDeps) {
+export function createDungeonModule({ store, db, projections, clock, gearOf }: DungeonModuleDeps) {
   const repo = createEventStoreGameRepository(store)
   const openGames = createDrizzleOpenGamesReader(db, projections)
-  const service = createDungeonService(repo, openGames, { clock })
+  const service = createDungeonService(repo, openGames, { clock, gearOf })
 
   // Règle d'accès aux canaux des expéditions : seuls les membres d'une expédition
   // peuvent l'écouter. Le canal est discret : il ne transmet aucune donnée d'événement,

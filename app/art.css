@@ -872,3 +872,12 @@ button.secondary { background: rgb(0 0 0 / 0.35); color: var(--ink); border: 1px
 button.danger:not(.secondary) { background: linear-gradient(180deg, #ff7a5c, #b8321f); color: #fff; border-color: #ff9a80; }
 button.secondary.danger { color: #ff9a80; border-color: rgb(255 120 90 / 0.6); }
 dialog.confirm { width: min(460px, calc(100vw - 32px)); }
+
+/* Écriteau du Marché : offres sans étal dans la rue. */
+.stall-more { position: absolute; z-index: 3; width: 14%; padding: 8px 6px; text-align: center; font-family: var(--title-font); font-weight: 700; font-size: 14px; color: #2a1608; background: linear-gradient(180deg, #e8c98a, #b98a4a); border: 2px solid #5a3a1a; border-radius: 6px; box-shadow: 0 6px 12px rgb(0 0 0 / 0.45); transform: rotate(-3deg); }
+.stall-more small { display: block; font-family: inherit; font-size: 11px; font-weight: 600; opacity: 0.8; }
+
+/* Avis « Objet prêt ! » de la Forge, en bas à droite de l'écran. */
+.notice { position: fixed; right: 20px; bottom: 20px; z-index: 50; width: min(340px, calc(100vw - 40px)); margin: 0; box-shadow: 0 12px 30px rgb(0 0 0 / 0.5), 0 0 24px rgb(255 160 80 / 0.35); }
+.notice .row { gap: 8px; justify-content: flex-end; }
+.notice a.button { margin-top: 0; }

@@ -31,35 +31,36 @@ objet »). Les tests de l'API sont dans `src/bootstrap/forge-api.test.ts`.
 | B1 | Canal temps réel `forge-<joueur>`, réservé au propriétaire de la forge | `src/modules/forge/index.ts` (`channelPolicy`), `ui.tsx` (`useChannel`) | « autorise un joueur à écouter le canal de sa forge, qui transmet ses événements » ; « refuse l'écoute de la forge d'un autre joueur (403) » | ADR 0010 (section B1) ; revue de la Forge, F9 |
 | B2 | Fin de fabrication gérée sans tâche de fond : échéance `readyAt` enregistrée, état « prêt » calculé à la lecture, retrait refusé avant l'échéance | `domain/forge.ts`, `domain/view.ts` (`toView`), `src/ui/use-countdown.ts` | Rubrique « Règle 5 - durée de fabrication » ; « refuse le retrait avant la fin de la fabrication, et l'accepte ensuite » | ADR 0010 (section B2) ; revue de la Forge, F8 |
 | B5 | Saga avec étape compensable entre la Forge et le Village : prélèvement, puis remboursement intégral à l'annulation | `domain/saga.ts`, `application/forge-service.ts`, `messages.ts` | « rembourse intégralement une fabrication annulée (compensation) » ; rubriques « Règle 6 - annulation remboursée », « Règle 11 - réponses du Village idempotentes » et « Règle 13 - paiement sans réponse » ; « ignore une réponse du Village livrée deux fois… » ; « libère la forge après le délai, puis rembourse un prélèvement confirmé plus tard » | ADR 0011, ADR 0014 ; diagramme de séquence de `docs/architecture.md` ; revue de la Forge, F5 et F6 |
+| B6 | Communication avec un deuxième module existant : le Donjon lit l'équipement porté par le chat du joueur, et renforce son héros | `src/modules/dungeon/domain/rules.ts` (`heroSpec`), `application/dungeon-service.ts` (port `gearOf`), `src/modules/forge/index.ts`, `src/bootstrap/create-api.ts` | `dungeon/domain/gear.test.ts` (4 tests) ; « renforce le héros du joueur qui porte un objet forgé, et pas celui des autres » | ADR 0016 |
 
 ## Écarts avec la fiche de cadrage
 
-- **Bonus de combat au Donjon (B6), non réalisé.** La fiche prévoyait que le Donjon lise les
-  bonus de l'équipement porté. Le chat équipé est affiché dans le Donjon, mais ses bonus ne
-  modifient pas encore les combats. Faute de temps, la priorité est allée à l'avatar et à son
-  affichage. La lecture côté serveur est décrite dans le Réexamen des ADR 0010 et 0012.
 - **Test de bout en bout avec Playwright (B10), non réalisé.** L'interface n'est vérifiée qu'à
   la main (risque 3 du bilan technique).
 - **Réalisé en plus de la fiche.** Le chat du joueur est aussi affiché sur le podium du
   Classement. Le jeu a reçu un guide et des icônes à la place des émojis (ADR 0013).
 - **Composition d'interface.** La fiche l'annonçait pour la Taverne et le Donjon. Elle est
-  décrite dans l'ADR 0012 : elle ne relève pas du bonus B6, puisque les serveurs de ces
-  modules ne communiquent pas avec la Forge.
+  décrite dans l'ADR 0012 : elle ne constitue pas à elle seule le bonus B6, revendiqué au titre de la lecture de
+l'équipement par le serveur du Donjon (ADR 0016).
 - **Règles ajoutées après la validation de la fiche.** La règle 13 (paiement sans réponse du
   Village) corrige un défaut trouvé par la revue de sécurité (F13, ADR 0014). La règle 14
   (fonte d'un objet) corrige un blocage : un inventaire plein empêchait définitivement
   d'utiliser la Forge. Les deux sont décrites dans la fiche, et signalées à l'enseignant.
+- **Modifications de modules existants.** Le niveau maximal des bâtiments du Village passe de
+  10 à 20, pour donner davantage de ressources face aux coûts de la Forge. Le Donjon reçoit
+  l'équipement des héros par un port (ADR 0016). Les deux modifications sont couvertes par
+  leurs tests.
 
 ## Indicateurs au rendu
 
 | Indicateur | À l'étiquette `td11-fin` | Au rendu |
 | --- | --- | --- |
-| Nombre de tests | 232, dans 33 fichiers | 300, dans 37 fichiers |
-| Couverture des lignes | 75 % | 64,96 % |
+| Nombre de tests | 232, dans 33 fichiers | 309, dans 40 fichiers |
+| Couverture des lignes | 75 % | 64,48 % |
 | Violations des règles d'architecture | 0 | 0 |
 
-La couverture baisse (75 % → 64,96 % des lignes, 50,45 % des branches) alors que les tests
-augmentent de 232 à 300. La mesure porte sur tout `src/`, y compris
+La couverture baisse (75 % → 64,48 % des lignes, 49,56 % des branches) alors que les tests
+augmentent de 232 à 309. La mesure porte sur tout `src/`, y compris
 le code d'interface, qu'aucun test ne charge. Entre les deux mesures, l'habillage graphique
 (`src/ui/art/`, environ 6 000 lignes de composants client) et l'interface de la Forge ont été
 ajoutés sans test automatique. Le code serveur de la Forge est couvert par 41 tests du domaine

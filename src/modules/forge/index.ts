@@ -41,6 +41,12 @@ export function createForgeModule({ store, dispatch, clock }: ForgeModuleDeps) {
     channelPolicy,
     handlers: createForgeHandlers(service),
     personalData: createForgePersonalData(service),
+    /**
+     * Somme des bonus de l'équipement porté par le chat d'un joueur : la lecture que la Forge
+     * offre aux autres modules côté serveur (le Donjon, bonus B6). Elle ne distribue pas la
+     * boîte d'envoi : c'est une simple lecture.
+     */
+    gearOf: async (playerId: string) => (await service.peek(playerId)).bonuses,
   }
 }
 

@@ -270,5 +270,4 @@ minutes ; un remboursement abandonné dans la boîte d'envoi n'est signalé qu'a
 (ADR 0014). Chaque lecture d'une forge rejoue tout son flux, sans
 instantané, et `GET /api/forge/cats` en rejoue jusqu'à vingt (ADR 0010). Les chats des
 joueurs sont lus par le navigateur après le chargement de chaque écran : ils apparaissent un
-instant après la scène. Les bonus de l'équipement ne sont pas encore appliqués aux combats du
-Donjon (ADR 0012).
+instant après la scène.

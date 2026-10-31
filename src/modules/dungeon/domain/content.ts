@@ -35,6 +35,25 @@ export const COMPANION_HEAL_RATIO = 0.4
 /** Caractéristiques de départ de chaque héros. */
 export const HERO = { hp: 30, attack: 6 }
 
+/**
+ * Équipement porté par le chat d'un joueur, lu auprès de la Forge quand il crée ou rejoint une
+ * expédition (bonus B6, ADR 0016). Le Donjon n'en connaît que ces deux nombres.
+ */
+export interface HeroGear {
+  attack: number
+  defense: number
+}
+
+/** Aucun équipement : un compagnon, ou un joueur qui n'a rien forgé. */
+export const NO_GEAR: HeroGear = { attack: 0, defense: 0 }
+
+/**
+ * Effet de l'équipement sur un héros : la moitié du bonus d'attaque s'ajoute à l'attaque, et
+ * chaque point de défense donne un point de vie. Les plafonds évitent qu'un équipement
+ * légendaire ne rende le Donjon trivial : au plus +6 en attaque et +15 points de vie.
+ */
+export const GEAR_EFFECT = { attackRatio: 0.5, hpPerDefense: 1, maxAttack: 6, maxHp: 15 }
+
 /** Écart maximal, en plus ou en moins, entre les dégâts infligés et l'attaque. */
 export const DAMAGE_SPREAD = { hero: 2, monster: 1 }
 

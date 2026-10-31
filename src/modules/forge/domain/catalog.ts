@@ -123,8 +123,13 @@ export function bonusOf(recipe: RecipeId, quality: Quality) {
 export const PAYMENT_TIMEOUT_MS = 10 * MINUTE
 
 /** Coût de base de l'amélioration de la forge, multiplié à chaque niveau (règle 9). */
-export const UPGRADE_BASE_COST = { wood: 150, stone: 100 } satisfies Amounts
-export const UPGRADE_GROWTH = 2
+export const UPGRADE_BASE_COST = { wood: 400, stone: 300 } satisfies Amounts
+/**
+ * Multiplicateur du coût à chaque niveau : 400, 1 200, 3 600 puis 10 800 poissons. Relevé (il
+ * valait 2, sur une base de 150) quand les bâtiments du Village sont passés au niveau 20 : la
+ * dernière amélioration doit rester un objectif, et non une formalité.
+ */
+export const UPGRADE_GROWTH = 3
 
 /** Coût de l'amélioration qui fait passer la forge du niveau donné au suivant. */
 export function upgradeCost(level: number): Amounts {

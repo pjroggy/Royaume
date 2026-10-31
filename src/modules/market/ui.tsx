@@ -3,6 +3,7 @@ import { hc } from 'hono/client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { RESOURCES, type Resource } from '@/modules/realm/contracts'
 import { useChannel } from '@/platform/realtime/use-channel'
+import { Amount } from '@/ui/amount'
 import { CatAvatar } from '@/ui/art/cat-avatar'
 import { lookOf } from '@/ui/art/color'
 import { Coins } from '@/ui/art/effects'
@@ -64,7 +65,7 @@ function AmountsText({ amounts }: { amounts: Amounts }) {
       {Object.entries(amounts).map(([resource, amount], index) => (
         <span key={resource}>
           {index > 0 && ', '}
-          {amount} <Entity kind={resource} />
+          <Amount value={amount ?? 0} /> <Entity kind={resource} />
         </span>
       ))}
     </>
@@ -166,6 +167,8 @@ export function MarketScreen() {
   const mine = list?.offers.filter((offer) => offer.mine) ?? []
   const others = list?.offers.filter((offer) => !offer.mine) ?? []
   const stalls = others.slice(0, STALLS.length)
+  // Offres des autres joueurs qui n'ont pas d'étal dans la rue.
+  const hidden = others.length - stalls.length
   const picked = others.find((offer) => offer.offerId === chosen) ?? stalls[0]
 
   /** Sélecteur d'une ressource et de sa quantité. */
@@ -281,6 +284,13 @@ export function MarketScreen() {
             </button>
           )
         })}
+        {/* Offres sans étal : un écriteau indique qu'il en reste dans la liste du panneau. */}
+        {hidden > 0 && (
+          <span className="stall-more" style={at('47%', '84%')}>
+            + {hidden} autre{hidden > 1 ? 's' : ''} offre{hidden > 1 ? 's' : ''}
+            <small>dans la liste</small>
+          </span>
+        )}
         {/* L'offre acceptée quitte la rue : les pièces jaillissent au milieu de la place. */}
         {coins && <Coins key={coins.n} left="30%" top="55%" />}
       </Scene>

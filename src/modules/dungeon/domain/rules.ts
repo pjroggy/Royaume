@@ -14,8 +14,10 @@ import {
   type Difficulty,
   DUNGEON_LENGTH,
   EXPLORE_MS,
+  GEAR_EFFECT,
   HEAL_AMOUNT,
   HERO,
+  type HeroGear,
   MAX_HEROES,
   MONSTER_ATTACK_BONUS,
   MONSTERS,
@@ -46,8 +48,16 @@ import { mix, pick, type Random, randomInt, seeded } from './random'
 // ---------------------------------------------------------------------------
 
 export type GameCommand =
-  | { type: 'CreateGame'; playerId: string; name: string; difficulty: Difficulty; seed: number }
-  | { type: 'JoinGame'; playerId: string; name: string }
+  // gear : équipement porté par le chat du joueur, lu auprès de la Forge (bonus B6).
+  | {
+      type: 'CreateGame'
+      playerId: string
+      name: string
+      difficulty: Difficulty
+      seed: number
+      gear?: HeroGear
+    }
+  | { type: 'JoinGame'; playerId: string; name: string; gear?: HeroGear }
   | { type: 'AddCompanion'; playerId: string }
   | { type: 'StartGame'; playerId: string }
   | { type: 'OpenDoor'; playerId: string }
@@ -266,6 +276,20 @@ export function decide(state: GameState, command: GameCommand, now: number): Dec
   return decision.ok ? { ok: true, events: [...due, ...decision.events] } : decision
 }
 
+/**
+ * Caractéristiques de départ d'un héros, compte tenu de son équipement (bonus B6). Elles sont
+ * enregistrées dans l'événement qui fait entrer le héros : changer d'équipement ensuite ne
+ * modifie pas une expédition en cours, et la rejouer donne toujours le même résultat.
+ */
+export function heroSpec(gear?: HeroGear) {
+  const attack = Math.round(Math.max(0, gear?.attack ?? 0) * GEAR_EFFECT.attackRatio)
+  const hp = Math.round(Math.max(0, gear?.defense ?? 0) * GEAR_EFFECT.hpPerDefense)
+  return {
+    hp: HERO.hp + Math.min(hp, GEAR_EFFECT.maxHp),
+    attack: HERO.attack + Math.min(attack, GEAR_EFFECT.maxAttack),
+  }
+}
+
 /** Un membre est un joueur qui incarne un héros de l'expédition ; un compagnon n'en est pas un. */
 const isMember = (state: GameState, playerId: string) =>
   state.heroes.some((hero) => hero.id === playerId && !hero.companion)
@@ -274,12 +298,13 @@ function decideCommand(state: GameState, command: GameCommand, now: number): Dec
   if (command.type === 'CreateGame') {
     if (state.exists) return fail({ code: 'ALREADY_EXISTS' })
     const { playerId, name, difficulty, seed } = command
+    const hero = heroSpec(command.gear)
     return {
       ok: true,
       events: [
         {
           type: 'GameCreated',
-          data: { hostId: playerId, hostName: name, hero: { ...HERO }, difficulty, seed, at: now },
+          data: { hostId: playerId, hostName: name, hero, difficulty, seed, at: now },
         },
       ],
     }
@@ -297,7 +322,12 @@ function decideCommand(state: GameState, command: GameCommand, now: number): Dec
         events: [
           {
             type: 'PlayerJoined',
-            data: { playerId: command.playerId, name: command.name, hero: { ...HERO }, at: now },
+            data: {
+              playerId: command.playerId,
+              name: command.name,
+              hero: heroSpec(command.gear),
+              at: now,
+            },
           },
         ],
       }

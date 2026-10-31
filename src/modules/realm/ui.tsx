@@ -3,6 +3,7 @@ import { hc } from 'hono/client'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
 import { useChannel } from '@/platform/realtime/use-channel'
+import { Amount } from '@/ui/amount'
 import { CatAvatar } from '@/ui/art/cat-avatar'
 import { Burst, FloatText } from '@/ui/art/effects'
 import { at, Scene } from '@/ui/art/scene'
@@ -223,8 +224,10 @@ export function VillageScreen({ userId }: { userId: string }) {
         <section className="panel stock" aria-label="Ressources">
           {RESOURCES.map((r) => (
             <div key={r}>
-              <Entity kind={r} showLabel /> {Math.floor(stock[r])}
-              <small>+{view.ratesPerMinute[r]} / min</small>
+              <Entity kind={r} showLabel /> <Amount value={stock[r]} />
+              <small>
+                +<Amount value={view.ratesPerMinute[r]} /> / min
+              </small>
             </div>
           ))}
         </section>
@@ -401,7 +404,8 @@ function BuildingDetails({
       <div className="line">
         <span>Production</span>
         <strong>
-          +{view.ratesPerMinute[resource]} <Entity kind={resource} showLabel /> / min
+          +<Amount value={view.ratesPerMinute[resource]} /> <Entity kind={resource} showLabel /> /
+          min
         </strong>
       </div>
       <div className="line">
@@ -410,7 +414,7 @@ function BuildingDetails({
           {cost
             ? Object.entries(cost).map(([r, n]) => (
                 <span key={r}>
-                  {n} <Entity kind={r} showLabel />{' '}
+                  <Amount value={n ?? 0} /> <Entity kind={r} showLabel />{' '}
                 </span>
               ))
             : '—'}

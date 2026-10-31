@@ -127,8 +127,9 @@ describe('API du module Forge - saga de paiement avec le Village', () => {
 
   it('améliore la forge une fois son coût payé, et forge ensuite des objets de meilleure qualité', async () => {
     const api = await forgeWithVillages()
-    // Vingt minutes de production : 300 poisson et 170 lait, de quoi payer l'amélioration.
-    api.advance(20)
+    // 50 minutes de production : 600 poisson et 350 lait. De quoi payer l'amélioration
+    // (400 poisson et 300 lait), puis le heaume cornu commandé ensuite (60 poisson et 40 lait).
+    api.advance(50)
     const view = await viewOf(await api.post('/api/forge/upgrade', {}))
     expect(view).toMatchObject({ level: 2, quality: 'sturdy' })
 

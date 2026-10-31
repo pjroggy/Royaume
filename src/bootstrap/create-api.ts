@@ -75,7 +75,11 @@ export function createApi({
     ? createRemoteRealmModule({ ...realmService, store, projections })
     : null
   const realm = remoteRealm ?? createRealmModule({ store, clock })
-  const dungeon = createDungeonModule({ store, db, projections, clock })
+  // La Forge, comme le Marché, déclenche la distribution après ses commandes et ses lectures.
+  const forge = createForgeModule({ store, dispatch: () => dispatcher.dispatch(), clock })
+  // Le Donjon reçoit l'équipement des joueurs par un port, relié ici à la Forge (ADR 0016) :
+  // aucun des deux modules n'importe l'autre.
+  const dungeon = createDungeonModule({ store, db, projections, clock, gearOf: forge.gearOf })
   const ranking = createRankingModule({ db, projections })
   // Le Marché déclenche la distribution après ses commandes et ses consultations.
   const market = createMarketModule({
@@ -87,9 +91,6 @@ export function createApi({
   })
 
   const tavern = createTavernModule({ db, clock })
-
-  // La Forge, comme le Marché, déclenche la distribution après ses commandes et ses lectures.
-  const forge = createForgeModule({ store, dispatch: () => dispatcher.dispatch(), clock })
 
   // Droits des joueurs : chaque module fournit ses données personnelles. L'identité vient
   // en dernier : tant qu'elle n'est pas effacée, le joueur peut relancer un effacement interrompu.

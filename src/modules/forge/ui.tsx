@@ -1,8 +1,10 @@
 'use client'
 import { hc } from 'hono/client'
 import Link from 'next/link'
-import { useCallback, useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useChannel } from '@/platform/realtime/use-channel'
+import { Amount } from '@/ui/amount'
 import { CatAvatar, type CatAvatarProps } from '@/ui/art/cat-avatar'
 import { bellyFor, lookOf } from '@/ui/art/color'
 import { Burst } from '@/ui/art/effects'
@@ -163,7 +165,7 @@ function Cost({ amounts }: { amounts: Amounts }) {
     <>
       {Object.entries(amounts).map(([resource, amount]) => (
         <span key={resource}>
-          {amount} <Entity kind={resource} />{' '}
+          <Amount value={amount ?? 0} /> <Entity kind={resource} />{' '}
         </span>
       ))}
     </>
@@ -882,5 +884,82 @@ export function AvatarScreen({ userId }: { userId: string }) {
         </section>
       </div>
     </>
+  )
+}
+
+/**
+ * Avis « Objet prêt ! », affiché sur toutes les pages du jeu sauf la Forge, quand une
+ * fabrication se termine. La fin d'une fabrication n'est pas un événement (échéance calculée à
+ * la lecture, ADR 0010) : l'avis relit la forge à chaque changement de page, puis attend
+ * l'échéance avec un minuteur du navigateur. Il n'ouvre aucun flux temps réel de plus.
+ * Placé dans la mise en page du jeu, il survit aux changements de page : un avis fermé ne
+ * réapparaît pas.
+ */
+export function ForgeNotice() {
+  const pathname = usePathname()
+  const onForge = pathname.startsWith('/forge')
+  const [job, setJob] = useState<{ recipe: string; readyAt: number } | null>(null)
+  // Échéances dont l'avis a été fermé, ou vu sur la page de la Forge.
+  const dismissed = useRef(new Set<number>())
+
+  // Relecture de la forge à chaque changement de page, hors de la Forge elle-même.
+  useEffect(() => {
+    if (pathname.startsWith('/forge')) return
+    let current = true
+    client.index.$get().then(async (res) => {
+      if (!res.ok || !current) return
+      const work = (await res.json()).view.current
+      const tracked =
+        work?.kind === 'item' && work.recipe && work.readyAt !== null && work.status !== 'paying'
+      setJob(tracked ? { recipe: work.recipe as string, readyAt: work.readyAt as number } : null)
+    })
+    return () => {
+      current = false
+    }
+  }, [pathname])
+
+  // Sur la page de la Forge, l'objet prêt est déjà visible sur l'enclume : pas d'avis.
+  useEffect(() => {
+    if (onForge && job) dismissed.current.add(job.readyAt)
+  }, [onForge, job])
+
+  const remaining = useCountdown(job?.readyAt ?? null, () => {})
+  const visible = !onForge && job !== null && remaining === 0 && !dismissed.current.has(job.readyAt)
+
+  function close() {
+    if (job) dismissed.current.add(job.readyAt)
+    setJob(null)
+  }
+
+  return (
+    <MotionRoot>
+      <AnimatePresence>
+        {visible && job && (
+          <motion.aside
+            key={job.readyAt}
+            className="notice panel"
+            role="status"
+            initial={{ opacity: 0, y: 40, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={BOUNCY_SPRING}
+          >
+            <p className="kicker">Forge</p>
+            <p>
+              <strong>Objet prêt !</strong> <Entity kind={job.recipe} showLabel /> attend sur
+              l'enclume.
+            </p>
+            <div className="row">
+              <Link className="button" href="/forge" onClick={close}>
+                Aller à la forge
+              </Link>
+              <button type="button" className="secondary" onClick={close}>
+                Plus tard
+              </button>
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
+    </MotionRoot>
   )
 }

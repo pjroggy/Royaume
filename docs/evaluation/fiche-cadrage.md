@@ -111,9 +111,11 @@ données ne sont pas destinées à disparaître rapidement, à la différence de
   Le Village n'est pas modifié : son langage publié accepte déjà ces deux sujets et l'adresse de
   réponse. Les identifiants de mouvement sont construits par la Forge (commande + étape), ce qui
   rend les échanges idempotents des deux côtés.
-- **Donjon** (bonus visé), par **lecture du langage publié** de la Forge : à l'arrivée d'un héros
-  dans une expédition, le Donjon lit les bonus de l'équipement porté. Le Donjon passerait par
-  `src/modules/forge/contracts.ts` et `index.ts`, sans importer de fichier interne.
+  
+- **Donjon** (bonus B6), par un **port** relié dans la racine de composition : quand un joueur
+  crée ou rejoint une expédition, le Donjon demande l'équipement porté par son chat
+  (`gearOf`, fourni par la Forge), et en déduit les caractéristiques de son héros. Aucun des
+  deux modules n'importe l'autre (ADR 0016).
 
 - **Taverne, Donjon et Classement**, par **composition d'interface** : leurs écrans dessinent les joueurs
   avec le composant `PlayerCat` et le hook `useCats`, exportés par l'entrée publique `ui.tsx`
